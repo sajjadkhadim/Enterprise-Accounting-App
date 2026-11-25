@@ -1,0 +1,24 @@
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/Api/">
+    <Project Path="src/Api/Accounting.API/Accounting.API.csproj" />
+  </Folder>
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/Accounting.Application/Accounting.Application.csproj" />
+    <Project Path="src/BuildingBlocks/Accounting.Domain/Accounting.Domain.csproj" />
+    <Project Path="src/BuildingBlocks/Accounting.Infrastructure/Accounting.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/" />
+  <Folder Name="/src/Modules/GeneralLedger/">
+    <Project Path="src/Modules/GeneralLedger/Accounting.GeneralLedger.Application/Accounting.GeneralLedger.Application.csproj" />
+    <Project Path="src/Modules/GeneralLedger/Accounting.GeneralLedger.Domain/Accounting.GeneralLedger.Domain.csproj" />
+    <Project Path="src/Modules/GeneralLedger/Accounting.GeneralLedger.Infrastructure/Accounting.GeneralLedger.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Identity/">
+    <Project Path="src/Modules/Identity/Accounting.Identity/Accounting.Identity.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/IntegrationTests/">
+    <Project Path="tests/IntegrationTests/Accounting.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,26 @@
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: enterprise-accounting-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: enterprise_accounting
+      POSTGRES_USER: accounting_user
+      POSTGRES_PASSWORD: ChangeThisLocalPassword123!
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - accounting_postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U accounting_user -d enterprise_accounting"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  accounting_postgres_data:
