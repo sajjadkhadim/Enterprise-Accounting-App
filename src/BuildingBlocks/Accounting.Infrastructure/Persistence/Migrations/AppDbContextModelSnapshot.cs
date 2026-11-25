@@ -332,6 +332,300 @@ namespace Accounting.Infrastructure.Persistence.Migrations
                     b.ToTable("tenants", (string)null);
                 });
 
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.FiscalPeriods.Entities.FiscalPeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountingBookId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accounting_book_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date")
+                        .HasColumnName("end_date");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date")
+                        .HasColumnName("start_date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fiscal_periods");
+
+                    b.HasIndex("AccountingBookId")
+                        .HasDatabaseName("ix_fiscal_periods_accounting_book_id");
+
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("ix_fiscal_periods_company_id");
+
+                    b.HasIndex("TenantId", "AccountingBookId", "StartDate", "EndDate")
+                        .HasDatabaseName("ix_fiscal_periods_tenant_id_accounting_book_id_start_date_end_");
+
+                    b.ToTable("fiscal_periods", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_fiscal_periods_accounting_book_id", "accounting_book_id <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("ck_fiscal_periods_company_id", "company_id <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("ck_fiscal_periods_date_range", "end_date >= start_date");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Journals.Entities.JournalEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountingBookId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accounting_book_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<DateOnly>("JournalDate")
+                        .HasColumnType("date")
+                        .HasColumnName("journal_date");
+
+                    b.Property<string>("JournalNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("journal_number");
+
+                    b.Property<int>("JournalSource")
+                        .HasColumnType("integer")
+                        .HasColumnName("journal_source");
+
+                    b.Property<int>("JournalType")
+                        .HasColumnType("integer")
+                        .HasColumnName("journal_type");
+
+                    b.Property<Guid?>("ReversedByJournalEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reversed_by_journal_entry_id");
+
+                    b.Property<Guid?>("ReversesJournalEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("reverses_journal_entry_id");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_journal_entries");
+
+                    b.HasIndex("AccountingBookId")
+                        .HasDatabaseName("ix_journal_entries_accounting_book_id");
+
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("ix_journal_entries_company_id");
+
+                    b.HasIndex("TenantId", "AccountingBookId", "JournalNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_journal_entries_tenant_id_accounting_book_id_journal_number");
+
+                    b.HasIndex("TenantId", "CompanyId", "JournalDate")
+                        .HasDatabaseName("ix_journal_entries_tenant_id_company_id_journal_date");
+
+                    b.ToTable("journal_entries", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_journal_entries_accounting_book_id", "accounting_book_id <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("ck_journal_entries_company_id", "company_id <> '00000000-0000-0000-0000-000000000000'");
+
+                            t.HasCheckConstraint("ck_journal_entries_description_length", "description IS NULL OR length(description) <= 500");
+
+                            t.HasCheckConstraint("ck_journal_entries_journal_number", "length(trim(journal_number)) > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Journals.Entities.JournalLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<Guid>("JournalEntryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("journal_entry_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_journal_lines");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_journal_lines_account_id");
+
+                    b.HasIndex("JournalEntryId")
+                        .HasDatabaseName("ix_journal_lines_journal_entry_id");
+
+                    b.ToTable("journal_lines", (string)null);
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Ledger.Entities.LedgerAccountBalance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<Guid>("AccountingBookId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accounting_book_id");
+
+                    b.Property<decimal>("ClosingCredit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("closing_credit");
+
+                    b.Property<decimal>("ClosingDebit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("closing_debit");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency_code");
+
+                    b.Property<Guid>("FiscalPeriodId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fiscal_period_id");
+
+                    b.Property<decimal>("OpeningCredit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("opening_credit");
+
+                    b.Property<decimal>("OpeningDebit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("opening_debit");
+
+                    b.Property<decimal>("PeriodCredit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("period_credit");
+
+                    b.Property<decimal>("PeriodDebit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("period_debit");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_ledger_account_balances");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_ledger_account_balances_account_id");
+
+                    b.HasIndex("AccountingBookId")
+                        .HasDatabaseName("ix_ledger_account_balances_accounting_book_id");
+
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("ix_ledger_account_balances_company_id");
+
+                    b.HasIndex("FiscalPeriodId")
+                        .HasDatabaseName("ix_ledger_account_balances_fiscal_period_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "FiscalPeriodId")
+                        .HasDatabaseName("ix_ledger_account_balances_tenant_id_company_id_fiscal_period_");
+
+                    b.HasIndex("TenantId", "AccountingBookId", "FiscalPeriodId", "AccountId", "CurrencyCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_ledger_account_balances_tenant_id_accounting_book_id_fiscal");
+
+                    b.ToTable("ledger_account_balances", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ledger_balances_amounts_non_negative", "opening_debit >= 0 AND\r\nopening_credit >= 0 AND\r\nperiod_debit >= 0 AND\r\nperiod_credit >= 0 AND\r\nclosing_debit >= 0 AND\r\nclosing_credit >= 0");
+
+                            t.HasCheckConstraint("ck_ledger_balances_closing_calculation", "closing_debit - closing_credit =\r\nopening_debit - opening_credit +\r\nperiod_debit - period_credit");
+
+                            t.HasCheckConstraint("ck_ledger_balances_closing_sides", "NOT (closing_debit > 0 AND closing_credit > 0)");
+
+                            t.HasCheckConstraint("ck_ledger_balances_currency_code", "char_length(currency_code) = 3");
+
+                            t.HasCheckConstraint("ck_ledger_balances_opening_sides", "NOT (opening_debit > 0 AND opening_credit > 0)");
+                        });
+                });
+
             modelBuilder.Entity("Accounting.Domain.ChartOfAccounts.Entities.Account", b =>
                 {
                     b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.ChartOfAccounts", null)
@@ -370,6 +664,172 @@ namespace Accounting.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_accounting_books_companies_tenant_id_company_id");
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.FiscalPeriods.Entities.FiscalPeriod", b =>
+                {
+                    b.HasOne("Accounting.Domain.GeneralLedger.Entities.AccountingBook", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingBookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fiscal_periods_accounting_books_accounting_book_id");
+
+                    b.HasOne("Accounting.Domain.Organization.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fiscal_periods_companies_company_id");
+
+                    b.HasOne("Accounting.Domain.Tenancy.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_fiscal_periods_tenants_tenant_id");
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Journals.Entities.JournalEntry", b =>
+                {
+                    b.HasOne("Accounting.Domain.GeneralLedger.Entities.AccountingBook", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingBookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_journal_entries_accounting_books_accounting_book_id");
+
+                    b.HasOne("Accounting.Domain.Organization.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_journal_entries_companies_company_id");
+
+                    b.HasOne("Accounting.Domain.Tenancy.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_journal_entries_tenants_tenant_id");
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Journals.Entities.JournalLine", b =>
+                {
+                    b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_journal_lines_accounts_account_id");
+
+                    b.HasOne("Accounting.GeneralLedger.Domain.Journals.Entities.JournalEntry", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("JournalEntryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_journal_lines_journal_entries_journal_entry_id");
+
+                    b.OwnsOne("Accounting.GeneralLedger.Domain.Journals.ValueObjects.Money", "Credit", b1 =>
+                        {
+                            b1.Property<Guid>("JournalLineId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("numeric(19,4)")
+                                .HasColumnName("credit_amount");
+
+                            b1.Property<string>("CurrencyCode")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("credit_currency_code");
+
+                            b1.HasKey("JournalLineId");
+
+                            b1.ToTable("journal_lines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("JournalLineId")
+                                .HasConstraintName("fk_journal_lines_journal_lines_id");
+                        });
+
+                    b.OwnsOne("Accounting.GeneralLedger.Domain.Journals.ValueObjects.Money", "Debit", b1 =>
+                        {
+                            b1.Property<Guid>("JournalLineId")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<decimal>("Amount")
+                                .HasPrecision(19, 4)
+                                .HasColumnType("numeric(19,4)")
+                                .HasColumnName("debit_amount");
+
+                            b1.Property<string>("CurrencyCode")
+                                .IsRequired()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasColumnName("debit_currency_code");
+
+                            b1.HasKey("JournalLineId");
+
+                            b1.ToTable("journal_lines");
+
+                            b1.WithOwner()
+                                .HasForeignKey("JournalLineId")
+                                .HasConstraintName("fk_journal_lines_journal_lines_id");
+                        });
+
+                    b.Navigation("Credit")
+                        .IsRequired();
+
+                    b.Navigation("Debit")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Ledger.Entities.LedgerAccountBalance", b =>
+                {
+                    b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_account_balances_accounts_account_id");
+
+                    b.HasOne("Accounting.Domain.GeneralLedger.Entities.AccountingBook", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingBookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_account_balances_accounting_books_accounting_book_id");
+
+                    b.HasOne("Accounting.Domain.Organization.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_account_balances_companies_company_id");
+
+                    b.HasOne("Accounting.GeneralLedger.Domain.FiscalPeriods.Entities.FiscalPeriod", null)
+                        .WithMany()
+                        .HasForeignKey("FiscalPeriodId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_account_balances_fiscal_periods_fiscal_period_id");
+
+                    b.HasOne("Accounting.Domain.Tenancy.Entities.Tenant", null)
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_ledger_account_balances_tenants_tenant_id");
+                });
+
+            modelBuilder.Entity("Accounting.GeneralLedger.Domain.Journals.Entities.JournalEntry", b =>
+                {
+                    b.Navigation("Lines");
                 });
 #pragma warning restore 612, 618
         }

@@ -15,6 +15,19 @@ public sealed class FiscalPeriodRepository : IFiscalPeriodRepository
         _context = context;
     }
 
+    public Task<FiscalPeriod?> GetByIdAsync(
+        Guid fiscalPeriodId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.Set<FiscalPeriod>()
+            .FirstOrDefaultAsync(
+                period =>
+                    period.Id == fiscalPeriodId &&
+                    period.TenantId == tenantId,
+                cancellationToken);
+    }
+
     public async Task<FiscalPeriod?> GetForDateAsync(
         Guid tenantId,
         Guid companyId,
@@ -39,5 +52,57 @@ public sealed class FiscalPeriodRepository : IFiscalPeriodRepository
         }
 
         return periods.SingleOrDefault();
+    }
+
+    public async Task<IReadOnlyList<FiscalPeriod>> GetAllAsync(
+    Guid tenantId,
+    Guid companyId,
+    Guid accountingBookId,
+    CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<FiscalPeriod>()
+            .AsNoTracking()
+            .Where(period =>
+                period.TenantId == tenantId &&
+                period.CompanyId == companyId &&
+                period.AccountingBookId == accountingBookId)
+            .OrderBy(period => period.StartDate)
+            .ToListAsync(cancellationToken);
+    }
+
+    public Task<bool> HasOverlapAsync(
+    Guid tenantId,
+    Guid companyId,
+    Guid accountingBookId,
+    DateOnly startDate,
+    DateOnly endDate,
+    Guid? excludeFiscalPeriodId = null,
+    CancellationToken cancellationToken = default)
+    {
+        return _context.Set<FiscalPeriod>().AnyAsync(
+            period =>
+                period.TenantId == tenantId &&
+                period.CompanyId == companyId &&
+                period.AccountingBookId == accountingBookId &&
+                period.StartDate <= endDate &&
+                period.EndDate >= startDate &&
+                (!excludeFiscalPeriodId.HasValue ||
+                 period.Id != excludeFiscalPeriodId.Value),
+            cancellationToken);
+    }
+
+    public async Task AddAsync(
+        FiscalPeriod fiscalPeriod,
+        CancellationToken cancellationToken = default)
+    {
+        await _context.Set<FiscalPeriod>().AddAsync(
+            fiscalPeriod,
+            cancellationToken);
+    }
+
+    public Task SaveChangesAsync(
+        CancellationToken cancellationToken = default)
+    {
+        return _context.SaveChangesAsync(cancellationToken);
     }
 }

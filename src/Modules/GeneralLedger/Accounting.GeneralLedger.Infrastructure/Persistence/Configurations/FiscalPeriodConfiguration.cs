@@ -1,4 +1,7 @@
 
+using Accounting.Domain.GeneralLedger.Entities;
+using Accounting.Domain.Organization.Entities;
+using Accounting.Domain.Tenancy.Entities;
 using Accounting.GeneralLedger.Domain.FiscalPeriods.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -49,6 +52,21 @@ public sealed class FiscalPeriodConfiguration
 
         builder.Property(period => period.CreatedAtUtc)
             .IsRequired();
+
+        builder.HasOne<Tenant>()
+            .WithMany()
+            .HasForeignKey(period => period.TenantId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<Company>()
+            .WithMany()
+            .HasForeignKey(period => period.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<AccountingBook>()
+            .WithMany()
+            .HasForeignKey(period => period.AccountingBookId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(period => new
         {
