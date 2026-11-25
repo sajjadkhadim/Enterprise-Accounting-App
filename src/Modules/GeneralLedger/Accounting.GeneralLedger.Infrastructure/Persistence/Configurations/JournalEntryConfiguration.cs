@@ -87,6 +87,14 @@ public sealed class JournalEntryConfiguration
             .HasForeignKey(journal => journal.AccountingBookId)
             .OnDelete(DeleteBehavior.Restrict);
 
+        builder.HasIndex(journal => new
+            {
+                journal.TenantId,
+                journal.ReversesJournalEntryId
+            })
+            .IsUnique()
+            .HasFilter("reverses_journal_entry_id IS NOT NULL");
+
         builder.HasMany(journal => journal.Lines)
             .WithOne()
             .HasForeignKey(line => line.JournalEntryId)

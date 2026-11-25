@@ -1,5 +1,6 @@
 
 using Accounting.GeneralLedger.Domain.Journals.Entities;
+using Accounting.GeneralLedger.Domain.Journals.Enums;
 
 namespace Accounting.GeneralLedger.Domain.Journals.Interfaces;
 
@@ -15,5 +16,24 @@ public interface IJournalEntryRepository
         CancellationToken cancellationToken = default);
 
     Task SaveChangesAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<(IReadOnlyList<JournalEntry> Items, int TotalCount)> GetPagedAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        int pageNumber,
+        int pageSize,
+        string? searchTerm = null,
+        JournalStatus? status = null,
+        JournalType? journalType = null,
+        DateOnly? fromDate = null,
+        DateOnly? toDate = null,
+        CancellationToken cancellationToken = default);
+
+
+    Task<bool> ExistsReversalAsync(
+        Guid originalJournalEntryId,
+        Guid tenantId,
         CancellationToken cancellationToken = default);
 }

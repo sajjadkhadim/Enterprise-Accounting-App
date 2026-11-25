@@ -95,6 +95,22 @@ public sealed class PostJournalEntryService
 
                 journal.Post();
 
+                // If this is a reversal, update the original journal
+                // within the same database transaction.
+                if (journal.ReversesJournalEntryId.HasValue)
+                {
+                    var originalJournal = await _journalRepository.GetByIdAsync(
+                        journal.ReversesJournalEntryId.Value,
+                        tenantId,
+                        ct);
+
+                    if (originalJournal is null)
+                        throw new InvalidOperationException(
+                            "The original journal for this reversal was not found.");
+
+                    originalJournal.MarkAsReversed(journal.Id);
+                }
+
                 await _updateLedgerBalancesService.ExecuteAsync(
                     journal,
                     fiscalPeriod.Id,

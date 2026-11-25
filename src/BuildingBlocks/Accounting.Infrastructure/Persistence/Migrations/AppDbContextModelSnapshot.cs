@@ -469,6 +469,11 @@ namespace Accounting.Infrastructure.Persistence.Migrations
                     b.HasIndex("CompanyId")
                         .HasDatabaseName("ix_journal_entries_company_id");
 
+                    b.HasIndex("TenantId", "ReversesJournalEntryId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_journal_entries_tenant_id_reverses_journal_entry_id")
+                        .HasFilter("reverses_journal_entry_id IS NOT NULL");
+
                     b.HasIndex("TenantId", "AccountingBookId", "JournalNumber")
                         .IsUnique()
                         .HasDatabaseName("ix_journal_entries_tenant_id_accounting_book_id_journal_number");

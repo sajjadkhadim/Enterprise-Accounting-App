@@ -2,6 +2,7 @@
 using Accounting.API.Contracts.GeneralLedger;
 using Accounting.GeneralLedger.Application.Journals.Services;
 using Accounting.GeneralLedger.Domain.Journals.Entities;
+using Accounting.GeneralLedger.Domain.Journals.Enums;
 using Accounting.GeneralLedger.Domain.Journals.ValueObjects;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,18 +21,24 @@ public sealed class JournalsController : ControllerBase
     private readonly CreateJournalEntryService _createJournalService;
     private readonly SubmitJournalForApprovalService _submitService;
     private readonly ApproveJournalEntryService _approveService;
+    private readonly ReverseJournalEntryService _reverseService;
+    private readonly GetPagedJournalEntriesService _getPagedService;
     public JournalsController(
         GetJournalEntryService getJournalService,
         PostJournalEntryService postJournalService,
         CreateJournalEntryService createJournalService,
         SubmitJournalForApprovalService submitService,
-        ApproveJournalEntryService approveService)
+        ApproveJournalEntryService approveService,
+        ReverseJournalEntryService reverseService,
+        GetPagedJournalEntriesService getPagedService)
     {
         _getJournalService = getJournalService;
         _postJournalService = postJournalService;
         _createJournalService = createJournalService;
         _submitService = submitService;
         _approveService = approveService;
+        _reverseService = reverseService;
+        _getPagedService = getPagedService;
     }
 
     [HttpGet("{id:guid}")]
@@ -190,6 +197,97 @@ public sealed class JournalsController : ControllerBase
         }
     }
 
+    [HttpGet("paged")]
+    public async Task<IActionResult> GetPaged(
+        [FromQuery] Guid companyId,
+        [FromQuery] Guid accountingBookId,
+        [FromQuery] int pageNumber = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string? searchTerm = null,
+        [FromQuery] JournalStatus? status = null,
+        [FromQuery] JournalType? journalType = null,
+        [FromQuery] DateOnly? fromDate = null,
+        [FromQuery] DateOnly? toDate = null,
+        CancellationToken cancellationToken = default)
+    {
+        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
+
+        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
+            return Unauthorized();
+
+        try
+        {
+            var result = await _getPagedService.ExecuteAsync(
+                tenantId,
+                companyId,
+                accountingBookId,
+                pageNumber,
+                pageSize,
+                searchTerm,
+                status,
+                journalType,
+                fromDate,
+                toDate,
+                cancellationToken);
+
+            return Ok(new
+            {
+                items = result.Items,
+                totalCount = result.TotalCount,
+                pageNumber,
+                pageSize,
+                totalPages = (int)Math.Ceiling(
+                    (double)result.TotalCount / pageSize)
+            });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/reverse")]
+    public async Task<IActionResult> Reverse(
+        Guid id,
+        [FromBody] ReverseJournalEntryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
+
+        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
+            return Unauthorized();
+
+        try
+        {
+            var reversalId = await _reverseService.ExecuteAsync(
+                id,
+                tenantId,
+                request.ReversalJournalNumber,
+                request.ReversalDate,
+                cancellationToken);
+
+            return CreatedAtAction(
+                nameof(Get),
+                new { id = reversalId },
+                new
+                {
+                    reversalJournalEntryId = reversalId,
+                    message = "Draft reversal journal created successfully."
+                });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
     private Guid GetTenantId()
     {
         var tenantIdValue = User.FindFirst("tenant_id")?.Value;

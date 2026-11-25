@@ -191,4 +191,86 @@ public class JournalEntry : TenantEntity
 
         JournalDate = journalDate;
     }
+
+    public void SetReversesJournalEntry(Guid originalJournalEntryId)
+    {
+        if (Status != JournalStatus.Draft)
+            throw new InvalidOperationException(
+                "Only draft journals can reference an original journal.");
+
+        if (originalJournalEntryId == Guid.Empty)
+            throw new ArgumentException(
+                "Original journal entry ID is required.");
+
+        if (ReversesJournalEntryId.HasValue)
+            throw new InvalidOperationException(
+                "This journal already references an original journal.");
+
+        ReversesJournalEntryId = originalJournalEntryId;
+    }
+
+    public void MarkAsReversed(Guid reversalJournalEntryId)
+    {
+        if (Status != JournalStatus.Posted)
+            throw new InvalidOperationException(
+                "Only posted journals can be reversed.");
+
+        if (reversalJournalEntryId == Guid.Empty)
+            throw new ArgumentException(
+                "Reversal journal entry ID is required.");
+
+        if (ReversedByJournalEntryId.HasValue)
+            throw new InvalidOperationException(
+                "This journal has already been reversed.");
+
+        ReversedByJournalEntryId = reversalJournalEntryId;
+        Status = JournalStatus.Reversed;
+    }
+
+    public static JournalEntry CreateReversal(
+    JournalEntry original,
+    string reversalJournalNumber,
+    DateOnly reversalDate)
+    {
+        ArgumentNullException.ThrowIfNull(original);
+
+        if (original.Status != JournalStatus.Posted)
+            throw new InvalidOperationException(
+                "Only posted journals can be reversed.");
+
+        if (original.ReversedByJournalEntryId.HasValue)
+            throw new InvalidOperationException(
+                "This journal has already been reversed.");
+
+        if (original.Lines.Count < 2)
+            throw new InvalidOperationException(
+                "Original journal must contain at least two lines.");
+
+        var reversal = new JournalEntry(
+            original.TenantId,
+            original.CompanyId,
+            original.AccountingBookId,
+            reversalJournalNumber,
+            $"Reversal of {original.JournalNumber}",
+            reversalDate,
+            JournalType.Reversal,
+            JournalSource.System);
+
+        foreach (var line in original.Lines)
+        {
+            reversal.AddLine(
+                line.AccountId,
+                $"Reversal: {line.Description}",
+                new Money(line.Credit.Amount, line.Credit.CurrencyCode),
+                new Money(line.Debit.Amount, line.Debit.CurrencyCode));
+        }
+
+        reversal.SetReversesJournalEntry(original.Id);
+
+        if (!reversal.IsBalanced())
+            throw new InvalidOperationException(
+                "Generated reversal journal is not balanced.");
+
+        return reversal;
+    }
 }
