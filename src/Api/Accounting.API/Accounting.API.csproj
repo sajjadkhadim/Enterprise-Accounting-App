@@ -21,6 +21,8 @@
     <ProjectReference Include="..\..\BuildingBlocks\Accounting.Application\Accounting.Application.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Accounting.Infrastructure\Accounting.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Modules\Identity\Accounting.Identity\Accounting.Identity.csproj" />
+    <ProjectReference Include="..\..\Modules\GeneralLedger\Accounting.GeneralLedger.Application\Accounting.GeneralLedger.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\GeneralLedger\Accounting.GeneralLedger.Infrastructure\Accounting.GeneralLedger.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

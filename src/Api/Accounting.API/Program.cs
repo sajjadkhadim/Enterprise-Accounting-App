@@ -1,5 +1,7 @@
 using Accounting.Infrastructure;
 using Accounting.Application;
+using Accounting.GeneralLedger.Application;
+using Accounting.GeneralLedger.Infrastructure;
 using Accounting.API.Middleware;
 using Accounting.Identity;
 using Accounting.API.Authentication;
@@ -37,6 +39,10 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+
+builder.Services.AddGeneralLedgerApplication();
+builder.Services.AddGeneralLedgerInfrastructure();
+
 builder.Services.AddIdentityModule(builder.Configuration);
 
 builder.Services.AddJwtAuthentication(builder.Configuration);

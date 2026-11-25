@@ -5,6 +5,7 @@ using Accounting.Domain.Common.Interfaces;
 using Accounting.Domain.GeneralLedger.Entities;
 using Accounting.Domain.Organization.Entities;
 using Accounting.Domain.Tenancy.Entities;
+using Accounting.Infrastructure.Persistence.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Accounting.Infrastructure.Persistence.Context;
@@ -12,13 +13,16 @@ namespace Accounting.Infrastructure.Persistence.Context;
 public class AppDbContext : DbContext
 {
     private readonly ITenantContext _tenantContext;
+    private readonly IEnumerable<IAppDbContextModelConfiguration> _moduleConfigurations;
 
     public AppDbContext(
         DbContextOptions<AppDbContext> options,
-        ITenantContext tenantContext)
+        ITenantContext tenantContext,
+        IEnumerable<IAppDbContextModelConfiguration> moduleConfigurations)
         : base(options)
     {
         _tenantContext = tenantContext;
+        _moduleConfigurations = moduleConfigurations;
     }
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
@@ -34,12 +38,18 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AppDbContext).Assembly);
 
+        foreach (var configuration in _moduleConfigurations)
+        {
+            configuration.Configure(modelBuilder);
+        }
+
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {
             if (typeof(TenantEntity).IsAssignableFrom(entityType.ClrType))
             {
                 var method = typeof(AppDbContext)
-                    .GetMethod(nameof(ConfigureTenantFilter),
+                    .GetMethod(
+                        nameof(ConfigureTenantFilter),
                         System.Reflection.BindingFlags.NonPublic |
                         System.Reflection.BindingFlags.Instance)!
                     .MakeGenericMethod(entityType.ClrType);

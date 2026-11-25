@@ -6,9 +6,9 @@ namespace Accounting.API.Controllers;
 
 [ApiController]
 [Route("api/health")]
-[AllowAnonymous]
 public sealed class HealthController : ControllerBase
 {
+    [AllowAnonymous]
     [HttpGet]
     public IActionResult Get()
     {
