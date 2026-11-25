@@ -7,6 +7,7 @@ public interface IAccountRepository
 {
     Task<Account?> GetByIdAsync(
         Guid accountId,
+        Guid tenantId,
         CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByCodeAsync(

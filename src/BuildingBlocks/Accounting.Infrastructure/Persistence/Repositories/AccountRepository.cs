@@ -17,10 +17,13 @@ public sealed class AccountRepository : IAccountRepository
 
     public Task<Account?> GetByIdAsync(
         Guid accountId,
+        Guid tenantId,
         CancellationToken cancellationToken = default)
     {
         return _context.Accounts.FirstOrDefaultAsync(
-            account => account.Id == accountId,
+            account => 
+                account.Id == accountId &&
+                account.TenantId == tenantId,
             cancellationToken);
     }
 

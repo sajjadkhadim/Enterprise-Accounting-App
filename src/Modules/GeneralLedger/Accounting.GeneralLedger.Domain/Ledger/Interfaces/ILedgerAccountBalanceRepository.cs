@@ -13,6 +13,14 @@ public interface ILedgerAccountBalanceRepository
         string currencyCode,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<LedgerAccountBalance>> GetTrialBalanceAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        Guid fiscalPeriodId,
+        string currencyCode,
+        CancellationToken cancellationToken = default);    
+
     Task AddAsync(
         LedgerAccountBalance balance,
         CancellationToken cancellationToken = default);

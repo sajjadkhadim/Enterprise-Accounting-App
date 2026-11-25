@@ -45,6 +45,7 @@ public sealed class AccountHierarchyService
 
         var parent = await _accountRepository.GetByIdAsync(
             parentAccountId.Value,
+            tenantId,
             cancellationToken);
 
         if (parent is null)
