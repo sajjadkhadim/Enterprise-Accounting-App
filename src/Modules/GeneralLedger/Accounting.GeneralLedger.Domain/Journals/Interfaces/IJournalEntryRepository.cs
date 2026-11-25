@@ -36,4 +36,15 @@ public interface IJournalEntryRepository
         Guid originalJournalEntryId,
         Guid tenantId,
         CancellationToken cancellationToken = default);
+
+
+    Task<IReadOnlyList<JournalEntry>> GetAccountActivityAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        Guid accountId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        string currencyCode,
+        CancellationToken cancellationToken = default);
 }

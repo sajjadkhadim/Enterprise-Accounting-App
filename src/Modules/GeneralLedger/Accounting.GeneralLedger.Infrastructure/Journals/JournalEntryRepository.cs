@@ -127,4 +127,44 @@ public sealed class JournalEntryRepository : IJournalEntryRepository
                 j.ReversesJournalEntryId == originalJournalEntryId,
                 cancellationToken);
     }
+
+    public async Task<IReadOnlyList<JournalEntry>> GetAccountActivityAsync(
+    Guid tenantId,
+    Guid companyId,
+    Guid accountingBookId,
+    Guid accountId,
+    DateOnly fromDate,
+    DateOnly toDate,
+    string currencyCode,
+    CancellationToken cancellationToken = default)
+    {
+        if (accountId == Guid.Empty)
+            throw new ArgumentException("Account ID is required.");
+
+        if (string.IsNullOrWhiteSpace(currencyCode))
+            throw new ArgumentException("Currency code is required.");
+
+        if (fromDate > toDate)
+            throw new ArgumentException("From date cannot be after to date.");
+
+        var currency = currencyCode.Trim().ToUpperInvariant();
+
+        return await _context.Set<JournalEntry>()
+            .AsNoTracking()
+            .Include(j => j.Lines)
+            .Where(j =>
+                j.TenantId == tenantId &&
+                j.CompanyId == companyId &&
+                j.AccountingBookId == accountingBookId &&
+                (j.Status == JournalStatus.Posted ||
+                 j.Status == JournalStatus.Reversed) &&
+                j.JournalDate >= fromDate &&
+                j.JournalDate <= toDate &&
+                j.Lines.Any(line =>
+                    line.AccountId == accountId &&
+                    line.Debit.CurrencyCode == currency))
+            .OrderBy(j => j.JournalDate)
+            .ThenBy(j => j.JournalNumber)
+            .ToListAsync(cancellationToken);
+    }
 }
