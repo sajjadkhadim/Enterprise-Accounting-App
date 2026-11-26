@@ -4,6 +4,7 @@ using Accounting.GeneralLedger.Domain.Ledger.Interfaces;
 using Accounting.GeneralLedger.Infrastructure.Common.Exceptions;
 using Accounting.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Accounting.GeneralLedger.Infrastructure.Ledger;
 
@@ -97,5 +98,50 @@ public sealed class LedgerAccountBalanceRepository
         {
             throw new LedgerConcurrencyException();
         }
+    }
+
+    public async Task AcquireBalanceLockAsync(
+    Guid tenantId,
+    Guid accountingBookId,
+    Guid fiscalPeriodId,
+    Guid accountId,
+    string currencyCode,
+    CancellationToken cancellationToken = default)
+    {
+        if (tenantId == Guid.Empty ||
+            accountingBookId == Guid.Empty ||
+            fiscalPeriodId == Guid.Empty ||
+            accountId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "All balance lock identifiers are required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(currencyCode))
+        {
+            throw new ArgumentException(
+                "Currency code is required.",
+                nameof(currencyCode));
+        }
+
+        if (_context.Database.CurrentTransaction is null)
+        {
+            throw new InvalidOperationException(
+                "A database transaction is required to acquire a balance lock.");
+        }
+
+        var normalizedCurrency = currencyCode.Trim().ToUpperInvariant();
+
+        var lockKey =
+            $"{tenantId:N}:{accountingBookId:N}:{fiscalPeriodId:N}:" +
+            $"{accountId:N}:{normalizedCurrency}";
+
+        await _context.Database.ExecuteSqlInterpolatedAsync(
+            $"""
+            SELECT pg_advisory_xact_lock(
+                hashtextextended({lockKey}, 0)
+            )
+            """,
+            cancellationToken);
     }
 }

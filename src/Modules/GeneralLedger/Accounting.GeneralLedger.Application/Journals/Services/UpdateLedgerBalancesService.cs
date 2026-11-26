@@ -38,8 +38,20 @@ public sealed class UpdateLedgerBalancesService
                 CurrencyCode = line.Debit.CurrencyCode
             });
 
-        foreach (var group in groupedLines)
+        foreach (var group in groupedLines
+            .OrderBy(group => group.Key.AccountId)
+            .ThenBy(group => group.Key.CurrencyCode, StringComparer.Ordinal))
         {
+            // Lock this account balance before reading or creating it.
+            await _balanceRepository.AcquireBalanceLockAsync(
+                journal.TenantId,
+                journal.AccountingBookId,
+                fiscalPeriodId,
+                group.Key.AccountId,
+                group.Key.CurrencyCode,
+                cancellationToken);
+
+            // Retrieve the existing balance after acquiring the lock.
             var balance = await _balanceRepository.GetAsync(
                 journal.TenantId,
                 journal.AccountingBookId,
@@ -48,6 +60,7 @@ public sealed class UpdateLedgerBalancesService
                 group.Key.CurrencyCode,
                 cancellationToken);
 
+            // Create a new balance if one does not exist.
             if (balance is null)
             {
                 balance = new LedgerAccountBalance(
@@ -63,6 +76,7 @@ public sealed class UpdateLedgerBalancesService
                     cancellationToken);
             }
 
+            // Calculate debit and credit movements for this account.
             var debitTotal = group.Sum(line => line.Debit.Amount);
             var creditTotal = group.Sum(line => line.Credit.Amount);
 
@@ -76,7 +90,6 @@ public sealed class UpdateLedgerBalancesService
                 balance.RecordMovement(0, creditTotal);
             }
         }
-
         // await _balanceRepository.SaveChangesAsync(cancellationToken);
     }
 }

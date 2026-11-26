@@ -57,5 +57,11 @@ public interface IJournalEntryRepository
         DateOnly toDate,
         CancellationToken cancellationToken = default);  
         
-          
+    Task<IReadOnlyList<JournalEntry>> GetPostedJournalsAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken cancellationToken = default);      
 }

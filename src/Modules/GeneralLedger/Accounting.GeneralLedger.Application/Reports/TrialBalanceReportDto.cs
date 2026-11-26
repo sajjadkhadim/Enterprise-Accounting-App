@@ -1,3 +1,4 @@
+
 namespace Accounting.GeneralLedger.Application.Reports;
 
 public sealed record TrialBalanceReportDto(
@@ -11,4 +12,14 @@ public sealed record TrialBalanceReportDto(
     decimal TotalPeriodDebit,
     decimal TotalPeriodCredit,
     decimal TotalClosingDebit,
-    decimal TotalClosingCredit);
+    decimal TotalClosingCredit)
+{
+    public bool IsOpeningBalanced =>
+        TotalOpeningDebit == TotalOpeningCredit;
+
+    public bool IsPeriodBalanced =>
+        TotalPeriodDebit == TotalPeriodCredit;
+
+    public bool IsClosingBalanced =>
+        TotalClosingDebit == TotalClosingCredit;
+}

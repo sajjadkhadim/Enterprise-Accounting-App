@@ -1,3 +1,4 @@
+
 using Accounting.Domain.ChartOfAccounts.Interfaces;
 using Accounting.GeneralLedger.Application.Reports;
 using Accounting.GeneralLedger.Domain.Ledger.Interfaces;
@@ -34,8 +35,11 @@ public sealed class GetTrialBalanceService
                 "Tenant, company, accounting book, and fiscal period are required.");
         }
 
-        if (string.IsNullOrWhiteSpace(currencyCode))
-            throw new ArgumentException("Currency code is required.");
+        if (string.IsNullOrWhiteSpace(currencyCode) ||
+            currencyCode.Trim().Length != 3)
+        {
+            throw new ArgumentException("A valid currency code is required.");
+        }
 
         var currency = currencyCode.Trim().ToUpperInvariant();
 
@@ -56,7 +60,7 @@ public sealed class GetTrialBalanceService
                 tenantId,
                 cancellationToken);
 
-            if (account is null)
+            if (account is null || !account.IsActive)
                 continue;
 
             lines.Add(new TrialBalanceLineDto(
@@ -69,7 +73,9 @@ public sealed class GetTrialBalanceService
                 balance.PeriodCredit,
                 balance.ClosingDebit,
                 balance.ClosingCredit,
-                balance.CurrencyCode));
+                balance.CurrencyCode,
+                account.AccountType.ToString(),
+                account.AccountCategory.ToString()));
         }
 
         return new TrialBalanceReportDto(

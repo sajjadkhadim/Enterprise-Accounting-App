@@ -21,7 +21,7 @@ public sealed class AccountRepository : IAccountRepository
         CancellationToken cancellationToken = default)
     {
         return _context.Accounts.FirstOrDefaultAsync(
-            account => 
+            account =>
                 account.Id == accountId &&
                 account.TenantId == tenantId,
             cancellationToken);
@@ -61,5 +61,19 @@ public sealed class AccountRepository : IAccountRepository
         CancellationToken cancellationToken = default)
     {
         await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<Account>> GetByChartAsync(
+        Guid tenantId,
+        Guid chartOfAccountsId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Accounts
+            .AsNoTracking()
+            .Where(account =>
+                account.TenantId == tenantId &&
+                account.ChartOfAccountsId == chartOfAccountsId)
+            .OrderBy(account => account.Code)
+            .ToListAsync(cancellationToken);
     }
 }

@@ -1,3 +1,4 @@
+
 using System.ComponentModel.DataAnnotations;
 using Accounting.GeneralLedger.Domain.Journals.Enums;
 
@@ -43,4 +44,8 @@ public sealed class CreateJournalLineRequest
 
     [Required, StringLength(3, MinimumLength = 3)]
     public string CurrencyCode { get; init; } = string.Empty;
+
+    [EnumDataType(typeof(CashFlowActivity))]
+    public CashFlowActivity CashFlowActivity { get; init; } =
+        CashFlowActivity.Excluded;
 }

@@ -71,8 +71,10 @@ public class JournalEntry : TenantEntity
         Guid accountId,
         string description,
         Money debit,
-        Money credit)
+        Money credit,
+        CashFlowActivity cashFlowActivity)
     {
+
         if (Status != JournalStatus.Draft)
             throw new InvalidOperationException(
                 "Lines can only be added to draft journals.");
@@ -81,7 +83,8 @@ public class JournalEntry : TenantEntity
             accountId,
             description,
             debit,
-            credit);
+            credit,
+            cashFlowActivity);
 
         if (_lines.Count > 0)
         {
@@ -262,7 +265,8 @@ public class JournalEntry : TenantEntity
                 line.AccountId,
                 $"Reversal: {line.Description}",
                 new Money(line.Credit.Amount, line.Credit.CurrencyCode),
-                new Money(line.Debit.Amount, line.Debit.CurrencyCode));
+                new Money(line.Debit.Amount, line.Debit.CurrencyCode),
+                line.CashFlowActivity);
         }
 
         reversal.SetReversesJournalEntry(original.Id);

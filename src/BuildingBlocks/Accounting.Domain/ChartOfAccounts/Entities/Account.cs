@@ -18,6 +18,10 @@ public class Account : TenantEntity
 
     public AccountCategory AccountCategory { get; private set; }
 
+    public CashFlowCategory CashFlowCategory { get; private set; }
+
+    public bool IsCashOrCashEquivalent { get; private set; }
+
     public bool IsPostingAllowed { get; private set; }
 
     public bool IsActive { get; private set; }
@@ -38,8 +42,9 @@ public class Account : TenantEntity
         string name,
         AccountType accountType,
         AccountCategory accountCategory,
-        int level,
-        bool isPostingAllowed)
+        CashFlowCategory cashFlowCategory = CashFlowCategory.Excluded,
+        int level = 1,
+        bool isPostingAllowed = false)
         : base(tenantId)
     {
         if (chartOfAccountsId == Guid.Empty)
@@ -63,6 +68,9 @@ public class Account : TenantEntity
         if (!Enum.IsDefined(accountCategory))
             throw new ArgumentOutOfRangeException(nameof(accountCategory));
 
+        if (!Enum.IsDefined(cashFlowCategory))
+            throw new ArgumentOutOfRangeException(nameof(cashFlowCategory));
+
         if (parentAccountId.HasValue && parentAccountId.Value == Guid.Empty)
             throw new ArgumentException(
                 "Parent account ID cannot be empty.",
@@ -79,6 +87,7 @@ public class Account : TenantEntity
         Name = name.Trim();
         AccountType = accountType;
         AccountCategory = accountCategory;
+        CashFlowCategory = cashFlowCategory;
         Level = level;
         IsPostingAllowed = isPostingAllowed;
         IsActive = true;
@@ -112,4 +121,24 @@ public class Account : TenantEntity
     {
         IsPostingAllowed = false;
     }
+
+    public void UpdateCashFlowCategory(CashFlowCategory category)
+    {
+        if (!Enum.IsDefined(category))
+            throw new ArgumentOutOfRangeException(nameof(category));
+
+        CashFlowCategory = category;
+    }
+
+    public void SetCashOrCashEquivalent(bool isCashOrCashEquivalent)
+{
+    if (isCashOrCashEquivalent &&
+        AccountType != AccountType.Asset)
+    {
+        throw new InvalidOperationException(
+            "Only asset accounts can be classified as cash or cash equivalents.");
+    }
+
+    IsCashOrCashEquivalent = isCashOrCashEquivalent;
+}
 }

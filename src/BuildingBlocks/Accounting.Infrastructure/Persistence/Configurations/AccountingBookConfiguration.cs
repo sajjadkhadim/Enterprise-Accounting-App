@@ -1,4 +1,3 @@
-
 using Accounting.Domain.GeneralLedger.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -15,6 +14,13 @@ public class AccountingBookConfiguration
         builder.HasKey(b => b.Id);
 
         builder.HasAlternateKey(b => new { b.TenantId, b.Id });
+
+        builder.HasAlternateKey(b => new
+        {
+            b.TenantId,
+            b.CompanyId,
+            b.Id
+        });
 
         builder.Property(b => b.CompanyId)
             .IsRequired();

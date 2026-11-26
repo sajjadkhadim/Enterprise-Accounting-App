@@ -1,3 +1,4 @@
+
 using Accounting.Application.Abstractions;
 using Accounting.GeneralLedger.Application.Ledger.Services;
 using Accounting.GeneralLedger.Domain.Common.Interfaces;
@@ -11,6 +12,7 @@ namespace Accounting.GeneralLedger.Application.Journals.Services;
 public sealed class ReverseJournalEntryService
 {
     private readonly IJournalEntryRepository _journalRepository;
+    private readonly IJournalAuditLogRepository _auditRepository;
     private readonly IJournalAccountValidator _accountValidator;
     private readonly IFiscalPeriodRepository _fiscalPeriodRepository;
     private readonly UpdateLedgerBalancesService _ledgerBalancesService;
@@ -18,12 +20,14 @@ public sealed class ReverseJournalEntryService
 
     public ReverseJournalEntryService(
         IJournalEntryRepository journalRepository,
+        IJournalAuditLogRepository auditRepository,
         IJournalAccountValidator accountValidator,
         IFiscalPeriodRepository fiscalPeriodRepository,
         UpdateLedgerBalancesService ledgerBalancesService,
         IUnitOfWork unitOfWork)
     {
         _journalRepository = journalRepository;
+        _auditRepository = auditRepository;
         _accountValidator = accountValidator;
         _fiscalPeriodRepository = fiscalPeriodRepository;
         _ledgerBalancesService = ledgerBalancesService;
@@ -33,6 +37,7 @@ public sealed class ReverseJournalEntryService
     public async Task<Guid> ExecuteAsync(
         Guid originalJournalEntryId,
         Guid tenantId,
+        Guid userId,
         string reversalJournalNumber,
         DateOnly reversalDate,
         CancellationToken cancellationToken = default)
@@ -42,6 +47,9 @@ public sealed class ReverseJournalEntryService
 
         if (tenantId == Guid.Empty)
             throw new ArgumentException("Tenant ID is required.");
+
+        if (userId == Guid.Empty)
+            throw new ArgumentException("User ID is required.");
 
         if (string.IsNullOrWhiteSpace(reversalJournalNumber))
             throw new ArgumentException("Reversal journal number is required.");
@@ -79,14 +87,28 @@ public sealed class ReverseJournalEntryService
                     reversalDate,
                     ct);
 
-                if (fiscalPeriod is null || !fiscalPeriod.AllowsPosting(reversalDate))
+                if (fiscalPeriod is null ||
+                    !fiscalPeriod.AllowsPosting(reversalDate))
+                {
                     throw new InvalidOperationException(
                         "The reversal date must belong to an open fiscal period.");
+                }
 
                 var reversal = JournalEntry.CreateReversal(
                     original,
                     reversalJournalNumber,
                     reversalDate);
+
+                await _auditRepository.AddAsync(
+                    new JournalAuditLog(
+                        tenantId,
+                        reversal.Id,
+                        userId,
+                        JournalAuditAction.Created,
+                        null,
+                        JournalStatus.Draft,
+                        "Reversal journal created."),
+                    ct);
 
                 foreach (var line in reversal.Lines)
                 {
@@ -103,19 +125,69 @@ public sealed class ReverseJournalEntryService
                             $"Account {line.AccountId} is not a valid posting account.");
                 }
 
+                var previousStatus = reversal.Status;
                 reversal.SubmitForApproval();
+
+                await _auditRepository.AddAsync(
+                    new JournalAuditLog(
+                        tenantId,
+                        reversal.Id,
+                        userId,
+                        JournalAuditAction.SubmittedForApproval,
+                        previousStatus,
+                        reversal.Status,
+                        "Reversal journal submitted for approval."),
+                    ct);
+
+                previousStatus = reversal.Status;
                 reversal.Approve();
+
+                await _auditRepository.AddAsync(
+                    new JournalAuditLog(
+                        tenantId,
+                        reversal.Id,
+                        userId,
+                        JournalAuditAction.Approved,
+                        previousStatus,
+                        reversal.Status,
+                        "Reversal journal approved."),
+                    ct);
+
+                previousStatus = reversal.Status;
                 reversal.Post();
 
+                await _auditRepository.AddAsync(
+                    new JournalAuditLog(
+                        tenantId,
+                        reversal.Id,
+                        userId,
+                        JournalAuditAction.Posted,
+                        previousStatus,
+                        reversal.Status,
+                        "Reversal journal posted."),
+                    ct);
+
+                // Update ledger balances using the reversal journal lines.
+                await _ledgerBalancesService.ExecuteAsync(
+                    reversal,
+                    fiscalPeriod.Id,
+                    ct);
+
+                var originalPreviousStatus = original.Status;
                 original.MarkAsReversed(reversal.Id);
 
+                await _auditRepository.AddAsync(
+                    new JournalAuditLog(
+                        tenantId,
+                        original.Id,
+                        userId,
+                        JournalAuditAction.Reversed,
+                        originalPreviousStatus,
+                        original.Status,
+                        $"Reversed by journal entry {reversal.Id}."),
+                    ct);
+
                 await _journalRepository.AddAsync(reversal, ct);
-
-                // await _ledgerBalancesService.ExecuteAsync(
-                //     reversal,
-                //     fiscalPeriod.Id,
-                //     ct);
-
                 await _journalRepository.SaveChangesAsync(ct);
 
                 return reversal.Id;

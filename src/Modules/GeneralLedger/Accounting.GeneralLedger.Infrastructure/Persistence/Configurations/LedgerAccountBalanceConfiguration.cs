@@ -84,22 +84,64 @@ public sealed class LedgerAccountBalanceConfiguration
 
         builder.HasOne<Account>()
             .WithMany()
-            .HasForeignKey(balance => balance.AccountId)
+            .HasForeignKey(balance => new
+            {
+                balance.TenantId,
+                balance.AccountId
+            })
+            .HasPrincipalKey(account => new
+            {
+                account.TenantId,
+                account.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<FiscalPeriod>()
             .WithMany()
-            .HasForeignKey(balance => balance.FiscalPeriodId)
+            .HasForeignKey(balance => new
+            {
+                balance.TenantId,
+                balance.CompanyId,
+                balance.AccountingBookId,
+                balance.FiscalPeriodId
+            })
+            .HasPrincipalKey(period => new
+            {
+                period.TenantId,
+                period.CompanyId,
+                period.AccountingBookId,
+                period.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Company>()
             .WithMany()
-            .HasForeignKey(balance => balance.CompanyId)
+            .HasForeignKey(balance => new
+            {
+                balance.TenantId,
+                balance.CompanyId
+            })
+            .HasPrincipalKey(company => new
+            {
+                company.TenantId,
+                company.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<AccountingBook>()
             .WithMany()
-            .HasForeignKey(balance => balance.AccountingBookId)
+            .HasForeignKey(balance => new
+            {
+                balance.TenantId,
+                balance.CompanyId,
+                balance.AccountingBookId
+            })
+            .HasPrincipalKey(book => new
+            {
+                book.TenantId,
+                book.CompanyId,
+                book.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Tenant>()

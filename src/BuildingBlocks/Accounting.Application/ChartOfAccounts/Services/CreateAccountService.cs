@@ -63,6 +63,7 @@ public sealed class CreateAccountService
                     name,
                     accountType,
                     accountCategory,
+                    CashFlowCategory.Excluded,
                     level,
                     isPostingAllowed);
 

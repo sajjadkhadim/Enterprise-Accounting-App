@@ -1,4 +1,3 @@
-
 using Accounting.Domain.GeneralLedger.Entities;
 using Accounting.Domain.Organization.Entities;
 using Accounting.Domain.Tenancy.Entities;
@@ -30,6 +29,14 @@ public sealed class FiscalPeriodConfiguration
 
         builder.HasKey(period => period.Id);
 
+        builder.HasAlternateKey(period => new
+        {
+            period.TenantId,
+            period.CompanyId,
+            period.AccountingBookId,
+            period.Id
+        });
+
         builder.Property(period => period.CompanyId)
             .IsRequired();
 
@@ -60,12 +67,32 @@ public sealed class FiscalPeriodConfiguration
 
         builder.HasOne<Company>()
             .WithMany()
-            .HasForeignKey(period => period.CompanyId)
+            .HasForeignKey(period => new
+            {
+                period.TenantId,
+                period.CompanyId
+            })
+            .HasPrincipalKey(company => new
+            {
+                company.TenantId,
+                company.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<AccountingBook>()
             .WithMany()
-            .HasForeignKey(period => period.AccountingBookId)
+            .HasForeignKey(period => new
+            {
+                period.TenantId,
+                period.CompanyId,
+                period.AccountingBookId
+            })
+            .HasPrincipalKey(book => new
+            {
+                book.TenantId,
+                book.CompanyId,
+                book.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(period => new

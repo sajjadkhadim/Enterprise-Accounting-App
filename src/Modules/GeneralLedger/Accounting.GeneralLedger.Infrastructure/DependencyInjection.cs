@@ -5,9 +5,10 @@ using Accounting.GeneralLedger.Domain.Journals.Interfaces;
 using Accounting.GeneralLedger.Domain.Ledger.Interfaces;
 using Accounting.GeneralLedger.Infrastructure.Accounts;
 using Accounting.GeneralLedger.Infrastructure.FiscalPeriods;
-using Accounting.GeneralLedger.Infrastructure.Journals;
 using Accounting.GeneralLedger.Infrastructure.Ledger;
 using Accounting.GeneralLedger.Infrastructure.Persistence;
+using Accounting.GeneralLedger.Infrastructure.Persistence.Repositories;
+using Accounting.GeneralLedger.Infrastructure.Persistence.Repositories.Journals;
 using Accounting.Infrastructure.Persistence.Configurations;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -27,6 +28,8 @@ public static class DependencyInjection
         services.AddScoped<IFiscalPeriodRepository, FiscalPeriodRepository>();
 
         services.AddScoped<ILedgerAccountBalanceRepository, LedgerAccountBalanceRepository>();
+
+        services.AddScoped<IJournalAuditLogRepository, JournalAuditLogRepository>();
 
         return services;
     }

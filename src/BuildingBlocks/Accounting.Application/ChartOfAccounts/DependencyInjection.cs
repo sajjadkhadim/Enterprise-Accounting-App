@@ -11,6 +11,7 @@ public static class DependencyInjection
     {
         services.AddScoped<AccountHierarchyService>();
         services.AddScoped<CreateAccountService>();
+        services.AddScoped<UpdateAccountService>();
 
         return services;
     }

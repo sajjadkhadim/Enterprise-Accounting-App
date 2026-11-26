@@ -1,4 +1,6 @@
+
 using Accounting.Domain.Common.Entities;
+using Accounting.GeneralLedger.Domain.Journals.Enums;
 using Accounting.GeneralLedger.Domain.Journals.ValueObjects;
 
 namespace Accounting.GeneralLedger.Domain.Journals.Entities;
@@ -13,6 +15,8 @@ public class JournalLine : BaseEntity
     public Money Debit { get; private set; } = null!;
     public Money Credit { get; private set; } = null!;
 
+    public CashFlowActivity CashFlowActivity { get; private set; }
+
     private JournalLine()
     {
     }
@@ -21,7 +25,8 @@ public class JournalLine : BaseEntity
         Guid accountId,
         string description,
         Money debit,
-        Money credit)
+        Money credit,
+        CashFlowActivity cashFlowActivity = CashFlowActivity.Excluded)
     {
         if (accountId == Guid.Empty)
             throw new ArgumentException("Account ID is required.");
@@ -41,9 +46,13 @@ public class JournalLine : BaseEntity
             throw new ArgumentException(
                 "A journal line must contain a debit or credit amount.");
 
+        if (!Enum.IsDefined(cashFlowActivity))
+            throw new ArgumentOutOfRangeException(nameof(cashFlowActivity));
+
         AccountId = accountId;
         Description = description?.Trim() ?? string.Empty;
         Debit = debit;
         Credit = credit;
+        CashFlowActivity = cashFlowActivity;
     }
 }

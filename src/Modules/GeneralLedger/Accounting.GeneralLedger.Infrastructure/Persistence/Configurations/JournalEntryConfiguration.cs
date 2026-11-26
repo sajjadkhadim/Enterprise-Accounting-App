@@ -78,20 +78,40 @@ public sealed class JournalEntryConfiguration
         // Company relationship
         builder.HasOne<Company>()
             .WithMany()
-            .HasForeignKey(journal => journal.CompanyId)
+            .HasForeignKey(journal => new
+            {
+                journal.TenantId,
+                journal.CompanyId
+            })
+            .HasPrincipalKey(company => new
+            {
+                company.TenantId,
+                company.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         // Accounting book relationship
         builder.HasOne<AccountingBook>()
             .WithMany()
-            .HasForeignKey(journal => journal.AccountingBookId)
+            .HasForeignKey(journal => new
+            {
+                journal.TenantId,
+                journal.CompanyId,
+                journal.AccountingBookId
+            })
+            .HasPrincipalKey(book => new
+            {
+                book.TenantId,
+                book.CompanyId,
+                book.Id
+            })
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasIndex(journal => new
-            {
-                journal.TenantId,
-                journal.ReversesJournalEntryId
-            })
+        {
+            journal.TenantId,
+            journal.ReversesJournalEntryId
+        })
             .IsUnique()
             .HasFilter("reverses_journal_entry_id IS NOT NULL");
 

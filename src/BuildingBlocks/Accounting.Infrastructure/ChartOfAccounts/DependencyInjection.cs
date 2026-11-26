@@ -11,7 +11,8 @@ public static class DependencyInjection
         this IServiceCollection services)
     {
         services.AddScoped<IAccountRepository, AccountRepository>();
-
+        services.AddScoped<IChartOfAccountsRepository, ChartOfAccountsRepository>();
+        
         return services;
     }
 }

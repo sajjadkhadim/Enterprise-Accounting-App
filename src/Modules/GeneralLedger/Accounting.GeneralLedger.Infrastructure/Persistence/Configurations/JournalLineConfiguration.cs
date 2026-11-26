@@ -11,7 +11,20 @@ public sealed class JournalLineConfiguration
 {
     public void Configure(EntityTypeBuilder<JournalLine> builder)
     {
-        builder.ToTable("journal_lines");
+        builder.ToTable("journal_lines", table =>
+        {
+            table.HasCheckConstraint(
+                "ck_journal_lines_matching_currencies",
+                "debit_currency_code = credit_currency_code");
+
+            table.HasCheckConstraint(
+                "ck_journal_lines_valid_debit_credit",
+                """
+                (debit_amount > 0 AND credit_amount = 0)
+                OR
+                (credit_amount > 0 AND debit_amount = 0)
+                """);
+        });
 
         builder.HasKey(line => line.Id);
 
@@ -54,5 +67,9 @@ public sealed class JournalLineConfiguration
                 .HasMaxLength(3)
                 .IsRequired();
         });
+
+        builder.Property(line => line.CashFlowActivity)
+            .HasConversion<int>()
+            .IsRequired();
     }
 }

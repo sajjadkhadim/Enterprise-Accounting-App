@@ -15,7 +15,6 @@ namespace Accounting.API.Controllers.GeneralLedger;
 [Authorize]
 public sealed class JournalsController : ControllerBase
 {
-    // Draft → PendingApproval → Approved → Posted
     private readonly GetJournalEntryService _getJournalService;
     private readonly PostJournalEntryService _postJournalService;
     private readonly CreateJournalEntryService _createJournalService;
@@ -23,6 +22,8 @@ public sealed class JournalsController : ControllerBase
     private readonly ApproveJournalEntryService _approveService;
     private readonly ReverseJournalEntryService _reverseService;
     private readonly GetPagedJournalEntriesService _getPagedService;
+    private readonly RejectJournalEntryService _rejectService;
+
     public JournalsController(
         GetJournalEntryService getJournalService,
         PostJournalEntryService postJournalService,
@@ -30,7 +31,8 @@ public sealed class JournalsController : ControllerBase
         SubmitJournalForApprovalService submitService,
         ApproveJournalEntryService approveService,
         ReverseJournalEntryService reverseService,
-        GetPagedJournalEntriesService getPagedService)
+        GetPagedJournalEntriesService getPagedService,
+        RejectJournalEntryService rejectService)
     {
         _getJournalService = getJournalService;
         _postJournalService = postJournalService;
@@ -39,6 +41,7 @@ public sealed class JournalsController : ControllerBase
         _approveService = approveService;
         _reverseService = reverseService;
         _getPagedService = getPagedService;
+        _rejectService = rejectService;
     }
 
     [HttpGet("{id:guid}")]
@@ -46,14 +49,12 @@ public sealed class JournalsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-
         if (!Guid.TryParse(
             User.FindFirst("tenant_id")?.Value,
             out var tenantId))
         {
             return Unauthorized();
         }
-        //var tenantId = GetTenantId();
 
         var journal = await _getJournalService.ExecuteAsync(
             id,
@@ -83,10 +84,12 @@ public sealed class JournalsController : ControllerBase
                 line.Description,
                 Debit = line.Debit.Amount,
                 Credit = line.Credit.Amount,
-                CurrencyCode = line.Debit.CurrencyCode
+                CurrencyCode = line.Debit.CurrencyCode,
+                line.CashFlowActivity
             })
         });
     }
+
 
     [HttpPost("{id:guid}/post")]
     public async Task<IActionResult> Post(
@@ -95,25 +98,55 @@ public sealed class JournalsController : ControllerBase
     {
         var tenantClaim = User.FindFirstValue("tenant_id");
 
-        if (!Guid.TryParse(tenantClaim, out var tenantId))
+        var userClaim =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(tenantClaim, out var tenantId) ||
+            !Guid.TryParse(userClaim, out var userId))
             return Forbid();
 
-        await _postJournalService.ExecuteAsync(
-            id,
-            tenantId,
-            cancellationToken);
+        try
+        {
+            await _postJournalService.ExecuteAsync(
+                id,
+                tenantId,
+                userId,
+                cancellationToken);
 
-        return NoContent();
+            return NoContent();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { error = exception.Message });
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
     }
+
+
 
     [HttpPost("create")]
     public async Task<IActionResult> Create(
-        CreateJournalEntryRequest request,
+        [FromBody] CreateJournalEntryRequest request,
         CancellationToken cancellationToken)
     {
         var tenantClaim = User.FindFirstValue("tenant_id");
 
+        var userClaim =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
         if (!Guid.TryParse(tenantClaim, out var tenantId))
+            return Forbid();
+
+        if (!Guid.TryParse(userClaim, out var userId))
             return Forbid();
 
         try
@@ -134,13 +167,15 @@ public sealed class JournalsController : ControllerBase
                     line.AccountId,
                     line.Description ?? string.Empty,
                     new Money(line.Debit, line.CurrencyCode),
-                    new Money(line.Credit, line.CurrencyCode));
+                    new Money(line.Credit, line.CurrencyCode),
+                    line.CashFlowActivity);
             }
 
             await _createJournalService.ExecuteAsync(
-               journal,
-               tenantId,
-               cancellationToken);
+                journal,
+                tenantId,
+                userId,
+                cancellationToken);
 
             return CreatedAtAction(
                 nameof(Get),
@@ -157,6 +192,7 @@ public sealed class JournalsController : ControllerBase
         }
     }
 
+
     [HttpPost("{id:guid}/submit")]
     public async Task<IActionResult> Submit(
         Guid id,
@@ -165,17 +201,37 @@ public sealed class JournalsController : ControllerBase
         try
         {
             var tenantId = GetTenantId();
+
+            var userClaim =
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue("sub");
+
+            if (!Guid.TryParse(userClaim, out var userId))
+                return Forbid();
+
             await _submitService.ExecuteAsync(
                 id,
                 tenantId,
+                userId,
                 cancellationToken);
+
             return NoContent();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { error = exception.Message });
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
         }
         catch (InvalidOperationException exception)
         {
             return BadRequest(new { error = exception.Message });
         }
     }
+
+
 
     [HttpPost("{id:guid}/approve")]
     public async Task<IActionResult> Approve(
@@ -185,17 +241,36 @@ public sealed class JournalsController : ControllerBase
         try
         {
             var tenantId = GetTenantId();
+
+            var userClaim =
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue("sub");
+
+            if (!Guid.TryParse(userClaim, out var userId))
+                return Forbid();
+
             await _approveService.ExecuteAsync(
                 id,
                 tenantId,
+                userId,
                 cancellationToken);
+
             return NoContent();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { error = exception.Message });
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
         }
         catch (InvalidOperationException exception)
         {
             return BadRequest(new { error = exception.Message });
         }
     }
+
 
     [HttpGet("paged")]
     public async Task<IActionResult> GetPaged(
@@ -246,22 +321,29 @@ public sealed class JournalsController : ControllerBase
         }
     }
 
+
     [HttpPost("{id:guid}/reverse")]
     public async Task<IActionResult> Reverse(
         Guid id,
         [FromBody] ReverseJournalEntryRequest request,
         CancellationToken cancellationToken)
     {
-        var tenantIdClaim = User.FindFirst("tenant_id")?.Value;
+        var tenantIdClaim = User.FindFirstValue("tenant_id");
 
-        if (!Guid.TryParse(tenantIdClaim, out var tenantId))
-            return Unauthorized();
+        var userClaim =
+            User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+            User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(tenantIdClaim, out var tenantId) ||
+            !Guid.TryParse(userClaim, out var userId))
+            return Forbid();
 
         try
         {
             var reversalId = await _reverseService.ExecuteAsync(
                 id,
                 tenantId,
+                userId,
                 request.ReversalJournalNumber,
                 request.ReversalDate,
                 cancellationToken);
@@ -272,7 +354,7 @@ public sealed class JournalsController : ControllerBase
                 new
                 {
                     reversalJournalEntryId = reversalId,
-                    message = "Draft reversal journal created successfully."
+                    message = "Reversal journal created and posted successfully."
                 });
         }
         catch (KeyNotFoundException ex)
@@ -288,6 +370,47 @@ public sealed class JournalsController : ControllerBase
             return Conflict(new { message = ex.Message });
         }
     }
+
+    [HttpPost("{id:guid}/reject")]
+    public async Task<IActionResult> Reject(
+        Guid id,
+        [FromBody] RejectJournalEntryRequest? request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var tenantId = GetTenantId();
+
+            var userClaim =
+                User.FindFirstValue(ClaimTypes.NameIdentifier) ??
+                User.FindFirstValue("sub");
+
+            if (!Guid.TryParse(userClaim, out var userId))
+                return Forbid();
+
+            await _rejectService.ExecuteAsync(
+                id,
+                tenantId,
+                userId,
+                request?.Comments,
+                cancellationToken);
+
+            return NoContent();
+        }
+        catch (KeyNotFoundException exception)
+        {
+            return NotFound(new { error = exception.Message });
+        }
+        catch (ArgumentException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return BadRequest(new { error = exception.Message });
+        }
+    }
+
     private Guid GetTenantId()
     {
         var tenantIdValue = User.FindFirst("tenant_id")?.Value;
@@ -301,5 +424,4 @@ public sealed class JournalsController : ControllerBase
 
         return tenantId;
     }
-
 }

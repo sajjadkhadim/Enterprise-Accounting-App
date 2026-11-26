@@ -1,36 +1,42 @@
+
 using Accounting.Application.Abstractions;
 using Accounting.GeneralLedger.Domain.Common.Interfaces;
 using Accounting.GeneralLedger.Domain.Journals.Entities;
-using Accounting.GeneralLedger.Domain.Journals.Interfaces;
 using Accounting.GeneralLedger.Domain.Journals.Enums;
+using Accounting.GeneralLedger.Domain.Journals.Interfaces;
 
 namespace Accounting.GeneralLedger.Application.Journals.Services;
 
 public sealed class CreateJournalEntryService
 {
     private readonly IJournalEntryRepository _repository;
+    private readonly IJournalAuditLogRepository _auditRepository;
     private readonly IJournalAccountValidator _accountValidator;
     private readonly IUnitOfWork _unitOfWork;
 
     public CreateJournalEntryService(
         IJournalEntryRepository repository,
+        IJournalAuditLogRepository auditRepository,
         IJournalAccountValidator accountValidator,
         IUnitOfWork unitOfWork)
     {
         _repository = repository;
+        _auditRepository = auditRepository;
         _accountValidator = accountValidator;
         _unitOfWork = unitOfWork;
     }
 
     public async Task ExecuteAsync(
-    JournalEntry journal,
-    Guid tenantId,
-    CancellationToken cancellationToken = default)
+        JournalEntry journal,
+        Guid tenantId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(journal);
 
-        if (tenantId == Guid.Empty)
-            throw new ArgumentException("Tenant ID is required.");
+        if (tenantId == Guid.Empty || userId == Guid.Empty)
+            throw new ArgumentException(
+                "Tenant ID and user ID are required.");
 
         if (journal.TenantId != tenantId)
             throw new InvalidOperationException(
@@ -59,6 +65,18 @@ public sealed class CreateJournalEntryService
                 }
 
                 await _repository.AddAsync(journal, ct);
+
+                var auditLog = new JournalAuditLog(
+                    tenantId,
+                    journal.Id,
+                    userId,
+                    JournalAuditAction.Created,
+                    null,
+                    JournalStatus.Draft,
+                    "Journal entry created.");
+
+                await _auditRepository.AddAsync(auditLog, ct);
+
                 await _repository.SaveChangesAsync(ct);
 
                 return true;

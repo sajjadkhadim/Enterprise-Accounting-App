@@ -25,4 +25,9 @@ public interface IAccountRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<Account>> GetByChartAsync(
+        Guid tenantId,
+        Guid chartOfAccountsId,
+        CancellationToken cancellationToken = default);
 }

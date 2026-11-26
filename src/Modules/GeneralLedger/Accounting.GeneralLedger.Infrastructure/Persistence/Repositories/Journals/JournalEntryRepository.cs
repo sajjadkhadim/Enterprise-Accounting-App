@@ -6,7 +6,7 @@ using Accounting.GeneralLedger.Infrastructure.Common.Exceptions;
 using Accounting.Infrastructure.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace Accounting.GeneralLedger.Infrastructure.Journals;
+namespace Accounting.GeneralLedger.Infrastructure.Persistence.Repositories.Journals;
 
 public sealed class JournalEntryRepository : IJournalEntryRepository
 {
@@ -187,5 +187,32 @@ public sealed class JournalEntryRepository : IJournalEntryRepository
                  journal.Status == JournalStatus.PendingApproval ||
                  journal.Status == JournalStatus.Approved),
                 cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<JournalEntry>> GetPostedJournalsAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken cancellationToken = default)
+    {
+        if (fromDate > toDate)
+            throw new ArgumentException(
+                "From date cannot be after to date.");
+
+        return await _context.Set<JournalEntry>()
+            .AsNoTracking()
+            .Include(journal => journal.Lines)
+            .Where(journal =>
+                journal.TenantId == tenantId &&
+                journal.CompanyId == companyId &&
+                journal.AccountingBookId == accountingBookId &&
+                journal.Status == JournalStatus.Posted &&
+                journal.JournalDate >= fromDate &&
+                journal.JournalDate <= toDate)
+            .OrderBy(journal => journal.JournalDate)
+            .ThenBy(journal => journal.JournalNumber)
+            .ToListAsync(cancellationToken);
     }
 }

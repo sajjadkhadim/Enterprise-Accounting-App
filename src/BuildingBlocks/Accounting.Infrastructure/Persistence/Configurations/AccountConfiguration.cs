@@ -23,6 +23,8 @@ public sealed class AccountConfiguration
 
         builder.HasKey(a => a.Id);
 
+        builder.HasAlternateKey(a => new { a.TenantId, a.Id });
+
         // Supports the composite self-reference to a parent account.
         builder.HasAlternateKey(a => new
         {
@@ -48,6 +50,14 @@ public sealed class AccountConfiguration
             .HasConversion<string>()
             .HasMaxLength(50)
             .IsRequired();
+
+        builder.Property(a => a.CashFlowCategory)
+            .HasConversion<int>()
+            .IsRequired();
+
+        builder.Property(a => a.IsCashOrCashEquivalent)
+            .IsRequired()
+            .HasDefaultValue(false);
 
         builder.Property(a => a.IsPostingAllowed).IsRequired();
         builder.Property(a => a.IsActive).IsRequired();

@@ -34,4 +34,12 @@ public interface ILedgerAccountBalanceRepository
 
     Task SaveChangesAsync(
         CancellationToken cancellationToken = default);
+
+    Task AcquireBalanceLockAsync(
+        Guid tenantId,
+        Guid accountingBookId,
+        Guid fiscalPeriodId,
+        Guid accountId,
+        string currencyCode,
+        CancellationToken cancellationToken = default);    
 }

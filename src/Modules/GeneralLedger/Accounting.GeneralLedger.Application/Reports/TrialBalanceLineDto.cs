@@ -1,3 +1,4 @@
+
 namespace Accounting.GeneralLedger.Application.Reports;
 
 public sealed record TrialBalanceLineDto(
@@ -10,4 +11,6 @@ public sealed record TrialBalanceLineDto(
     decimal PeriodCredit,
     decimal ClosingDebit,
     decimal ClosingCredit,
-    string CurrencyCode);
+    string CurrencyCode,
+    string AccountType,
+    string AccountCategory);

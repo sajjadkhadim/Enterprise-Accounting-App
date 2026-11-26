@@ -23,6 +23,12 @@ public static class DependencyInjection
         services.AddScoped<ReverseJournalEntryService>();
         services.AddScoped<GetTrialBalanceService>();
         services.AddScoped<GetAccountActivityService>();
+        services.AddScoped<GetFinancialStatementService>();
+        services.AddScoped<CashFlowStatementService>();
+        services.AddScoped<GetAccountLedgerService>();
+        services.AddScoped<GetJournalRegisterService>();
+        services.AddScoped<GetJournalAuditHistoryService>();
+        services.AddScoped<RejectJournalEntryService>();
         // Fiscal Period Service
         services.AddScoped<CreateFiscalPeriodService>();
         services.AddScoped<GetFiscalPeriodsService>();
