@@ -167,4 +167,25 @@ public sealed class JournalEntryRepository : IJournalEntryRepository
             .ThenBy(j => j.JournalNumber)
             .ToListAsync(cancellationToken);
     }
+
+    public Task<bool> HasUnpostedJournalsAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.Set<JournalEntry>()
+            .AnyAsync(journal =>
+                journal.TenantId == tenantId &&
+                journal.CompanyId == companyId &&
+                journal.AccountingBookId == accountingBookId &&
+                journal.JournalDate >= fromDate &&
+                journal.JournalDate <= toDate &&
+                (journal.Status == JournalStatus.Draft ||
+                 journal.Status == JournalStatus.PendingApproval ||
+                 journal.Status == JournalStatus.Approved),
+                cancellationToken);
+    }
 }

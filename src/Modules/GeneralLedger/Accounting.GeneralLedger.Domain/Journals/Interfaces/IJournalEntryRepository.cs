@@ -47,4 +47,15 @@ public interface IJournalEntryRepository
         DateOnly toDate,
         string currencyCode,
         CancellationToken cancellationToken = default);
+
+
+    Task<bool> HasUnpostedJournalsAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken cancellationToken = default);  
+        
+          
 }

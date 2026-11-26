@@ -36,6 +36,23 @@ public sealed class LedgerAccountBalanceRepository
                 cancellationToken);
     }
 
+    public async Task<IReadOnlyList<LedgerAccountBalance>> GetForFiscalPeriodAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        Guid fiscalPeriodId,
+        CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<LedgerAccountBalance>()
+            .AsNoTracking()
+            .Where(balance =>
+                balance.TenantId == tenantId &&
+                balance.CompanyId == companyId &&
+                balance.AccountingBookId == accountingBookId &&
+                balance.FiscalPeriodId == fiscalPeriodId)
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyList<LedgerAccountBalance>> GetTrialBalanceAsync(
         Guid tenantId,
         Guid companyId,
