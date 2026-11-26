@@ -31,6 +31,22 @@ public sealed class JournalEntryRepository : IJournalEntryRepository
                 cancellationToken);
     }
 
+    public Task<JournalEntry?> GetByNumberAsync(
+        Guid tenantId,
+        Guid accountingBookId,
+        string journalNumber,
+        CancellationToken cancellationToken = default)
+    {
+        return _context.Set<JournalEntry>()
+            .Include(journal => journal.Lines)
+            .FirstOrDefaultAsync(
+                journal =>
+                    journal.TenantId == tenantId &&
+                    journal.AccountingBookId == accountingBookId &&
+                    journal.JournalNumber == journalNumber,
+                cancellationToken);
+    }
+
     public async Task AddAsync(
         JournalEntry journal,
         CancellationToken cancellationToken = default)
@@ -187,6 +203,28 @@ public sealed class JournalEntryRepository : IJournalEntryRepository
                  journal.Status == JournalStatus.PendingApproval ||
                  journal.Status == JournalStatus.Approved),
                 cancellationToken);
+    }
+
+    public Task<bool> HasUnpostedNonClosingJournalsAsync(
+    Guid tenantId,
+    Guid companyId,
+    Guid accountingBookId,
+    DateOnly fromDate,
+    DateOnly toDate,
+    CancellationToken cancellationToken = default)
+    {
+        return _context.Set<JournalEntry>().AnyAsync(
+            journal =>
+                journal.TenantId == tenantId &&
+                journal.CompanyId == companyId &&
+                journal.AccountingBookId == accountingBookId &&
+                journal.JournalDate >= fromDate &&
+                journal.JournalDate <= toDate &&
+                journal.JournalType != JournalType.Closing &&
+                (journal.Status == JournalStatus.Draft ||
+                 journal.Status == JournalStatus.PendingApproval ||
+                 journal.Status == JournalStatus.Approved),
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<JournalEntry>> GetPostedJournalsAsync(

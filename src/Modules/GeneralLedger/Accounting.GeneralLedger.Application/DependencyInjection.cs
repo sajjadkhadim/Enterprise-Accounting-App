@@ -34,6 +34,8 @@ public static class DependencyInjection
         services.AddScoped<GetFiscalPeriodsService>();
         services.AddScoped<UpdateFiscalPeriodService>();
         services.AddScoped<UpdateFiscalPeriodStatusService>();
+        services.AddScoped<CarryForwardFiscalPeriodBalancesService>();
+        services.AddScoped<YearEndClosingService>();
 
         return services;
     }

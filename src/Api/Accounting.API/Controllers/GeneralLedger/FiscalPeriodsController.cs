@@ -117,10 +117,10 @@ public sealed class FiscalPeriodsController : ControllerBase
         }
     }
 
-    [HttpPost("{id:guid}/actions/{action}")]
+    [HttpPost("{id:guid}/actions/{operation}")]
     public async Task<IActionResult> UpdateStatus(
     Guid id,
-    string action,
+    string operation,
     CancellationToken cancellationToken)
     {
         if (!Guid.TryParse(
@@ -135,7 +135,7 @@ public sealed class FiscalPeriodsController : ControllerBase
             await _updateFiscalPeriodStatusService.ExecuteAsync(
                 id,
                 tenantId,
-                action,
+                operation,
                 cancellationToken);
 
             return NoContent();

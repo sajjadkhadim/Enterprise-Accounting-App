@@ -11,6 +11,12 @@ public interface IJournalEntryRepository
         Guid tenantId,
         CancellationToken cancellationToken = default);
 
+    Task<JournalEntry?> GetByNumberAsync(
+        Guid tenantId,
+        Guid accountingBookId,
+        string journalNumber,
+        CancellationToken cancellationToken = default);
+
     Task AddAsync(
         JournalEntry journal,
         CancellationToken cancellationToken = default);
@@ -55,13 +61,21 @@ public interface IJournalEntryRepository
         Guid accountingBookId,
         DateOnly fromDate,
         DateOnly toDate,
-        CancellationToken cancellationToken = default);  
-        
+        CancellationToken cancellationToken = default);
+
+    Task<bool> HasUnpostedNonClosingJournalsAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyList<JournalEntry>> GetPostedJournalsAsync(
         Guid tenantId,
         Guid companyId,
         Guid accountingBookId,
         DateOnly fromDate,
         DateOnly toDate,
-        CancellationToken cancellationToken = default);      
+        CancellationToken cancellationToken = default);
 }
