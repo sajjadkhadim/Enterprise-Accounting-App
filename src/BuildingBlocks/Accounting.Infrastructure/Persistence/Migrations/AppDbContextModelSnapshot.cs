@@ -22,6 +22,385 @@ namespace Accounting.Infrastructure.Persistence.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Bills.Entities.SupplierBill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountingBookId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accounting_book_id");
+
+                    b.Property<string>("BillNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("bill_number");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency_code")
+                        .IsFixedLength();
+
+                    b.Property<DateOnly>("DueDate")
+                        .HasColumnType("date")
+                        .HasColumnName("due_date");
+
+                    b.Property<DateOnly>("InvoiceDate")
+                        .HasColumnType("date")
+                        .HasColumnName("invoice_date");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("SupplierId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("supplier_id");
+
+                    b.Property<string>("SupplierInvoiceNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("supplier_invoice_number");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_supplier_bills");
+
+                    b.HasIndex("AccountingBookId")
+                        .HasDatabaseName("ix_supplier_bills_accounting_book_id");
+
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("ix_supplier_bills_company_id");
+
+                    b.HasIndex("SupplierId")
+                        .HasDatabaseName("ix_supplier_bills_supplier_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountingBookId", "BillNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_supplier_bills_tenant_id_company_id_accounting_book_id_bill");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountingBookId", "InvoiceDate")
+                        .HasDatabaseName("ix_supplier_bills_tenant_id_company_id_accounting_book_id_invo");
+
+                    b.HasIndex("TenantId", "CompanyId", "SupplierId", "SupplierInvoiceNumber")
+                        .IsUnique()
+                        .HasDatabaseName("ix_supplier_bills_tenant_id_company_id_supplier_id_supplier_in");
+
+                    b.ToTable("supplier_bills", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_supplier_bills_currency", "char_length(currency_code) = 3");
+
+                            t.HasCheckConstraint("ck_supplier_bills_due_date", "due_date >= invoice_date");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Bills.Entities.SupplierBillLine", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("account_id");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid?>("SupplierBillId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("supplier_bill_id");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("tax_rate");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("unit_price");
+
+                    b.HasKey("Id")
+                        .HasName("pk_supplier_bill_lines");
+
+                    b.HasIndex("AccountId")
+                        .HasDatabaseName("ix_supplier_bill_lines_account_id");
+
+                    b.HasIndex("SupplierBillId")
+                        .HasDatabaseName("ix_supplier_bill_lines_supplier_bill_id");
+
+                    b.ToTable("supplier_bill_lines", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_supplier_bill_lines_quantity", "quantity > 0");
+
+                            t.HasCheckConstraint("ck_supplier_bill_lines_tax_rate", "tax_rate >= 0 AND tax_rate <= 100");
+
+                            t.HasCheckConstraint("ck_supplier_bill_lines_unit_price", "unit_price >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Configuration.Entities.AccountsPayableSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AccountingBookId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("accounting_book_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<Guid?>("InputVatAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("input_vat_account_id");
+
+                    b.Property<Guid>("PayableControlAccountId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payable_control_account_id");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.Property<DateTime?>("UpdatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at_utc");
+
+                    b.HasKey("Id")
+                        .HasName("pk_accounts_payable_settings");
+
+                    b.HasIndex("AccountingBookId")
+                        .HasDatabaseName("ix_accounts_payable_settings_accounting_book_id");
+
+                    b.HasIndex("CompanyId")
+                        .HasDatabaseName("ix_accounts_payable_settings_company_id");
+
+                    b.HasIndex("InputVatAccountId")
+                        .HasDatabaseName("ix_accounts_payable_settings_input_vat_account_id");
+
+                    b.HasIndex("PayableControlAccountId")
+                        .HasDatabaseName("ix_accounts_payable_settings_payable_control_account_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "AccountingBookId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_accounts_payable_settings_tenant_id_company_id_accounting_b");
+
+                    b.ToTable("accounts_payable_settings", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_ap_settings_different_accounts", "input_vat_account_id IS NULL OR input_vat_account_id <> payable_control_account_id");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.PaymentTerms.Entities.PaymentTerm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<int?>("DiscountDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("discount_days");
+
+                    b.Property<decimal?>("DiscountPercentage")
+                        .HasPrecision(7, 4)
+                        .HasColumnType("numeric(7,4)")
+                        .HasColumnName("discount_percentage");
+
+                    b.Property<int>("DueDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("due_days");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_payment_terms");
+
+                    b.HasIndex("TenantId", "CompanyId", "Code")
+                        .IsUnique()
+                        .HasDatabaseName("ix_payment_terms_tenant_id_company_id_code");
+
+                    b.HasIndex("TenantId", "CompanyId", "Status")
+                        .HasDatabaseName("ix_payment_terms_tenant_id_company_id_status");
+
+                    b.ToTable("payment_terms", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_payment_terms_discount", "(discount_days IS NULL AND discount_percentage IS NULL) OR (discount_days >= 0 AND discount_days <= due_days AND discount_percentage > 0 AND discount_percentage <= 100)");
+
+                            t.HasCheckConstraint("ck_payment_terms_due_days", "due_days >= 0 AND due_days <= 365");
+                        });
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Suppliers.Entities.Supplier", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("address");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<string>("CountryCode")
+                        .HasMaxLength(2)
+                        .HasColumnType("character varying(2)")
+                        .HasColumnName("country_code");
+
+                    b.Property<DateTime>("CreatedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at_utc");
+
+                    b.Property<decimal>("CreditLimit")
+                        .HasPrecision(19, 4)
+                        .HasColumnType("numeric(19,4)")
+                        .HasColumnName("credit_limit");
+
+                    b.Property<string>("CurrencyCode")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character(3)")
+                        .HasColumnName("currency_code")
+                        .IsFixedLength();
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(254)
+                        .HasColumnType("character varying(254)")
+                        .HasColumnName("email");
+
+                    b.Property<string>("LegalName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("legal_name");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("PaymentTermId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("payment_term_id");
+
+                    b.Property<int>("PaymentTermsDays")
+                        .HasColumnType("integer")
+                        .HasColumnName("payment_terms_days");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("phone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<string>("SupplierCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("supplier_code");
+
+                    b.Property<string>("TaxRegistrationNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tax_registration_number");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tenant_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_suppliers");
+
+                    b.HasIndex("PaymentTermId")
+                        .HasDatabaseName("ix_suppliers_payment_term_id");
+
+                    b.HasIndex("TenantId", "CompanyId", "Name")
+                        .HasDatabaseName("ix_suppliers_tenant_id_company_id_name");
+
+                    b.HasIndex("TenantId", "CompanyId", "Status")
+                        .HasDatabaseName("ix_suppliers_tenant_id_company_id_status");
+
+                    b.HasIndex("TenantId", "CompanyId", "SupplierCode")
+                        .IsUnique()
+                        .HasDatabaseName("ix_suppliers_tenant_id_company_id_supplier_code");
+
+                    b.ToTable("suppliers", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_suppliers_credit_limit", "credit_limit >= 0");
+
+                            t.HasCheckConstraint("ck_suppliers_payment_terms_days", "payment_terms_days >= 0 AND payment_terms_days <= 365");
+                        });
+                });
+
             modelBuilder.Entity("Accounting.Domain.ChartOfAccounts.Entities.Account", b =>
                 {
                     b.Property<Guid>("Id")
@@ -699,6 +1078,85 @@ namespace Accounting.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Bills.Entities.SupplierBill", b =>
+                {
+                    b.HasOne("Accounting.Domain.GeneralLedger.Entities.AccountingBook", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingBookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_supplier_bills_accounting_books_accounting_book_id");
+
+                    b.HasOne("Accounting.Domain.Organization.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_supplier_bills_companies_company_id");
+
+                    b.HasOne("Accounting.AccountsPayable.Domain.Suppliers.Entities.Supplier", null)
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_supplier_bills_supplier_supplier_id");
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Bills.Entities.SupplierBillLine", b =>
+                {
+                    b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_supplier_bill_lines_accounts_account_id");
+
+                    b.HasOne("Accounting.AccountsPayable.Domain.Bills.Entities.SupplierBill", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SupplierBillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_supplier_bill_lines_supplier_bills_supplier_bill_id");
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Configuration.Entities.AccountsPayableSettings", b =>
+                {
+                    b.HasOne("Accounting.Domain.GeneralLedger.Entities.AccountingBook", null)
+                        .WithMany()
+                        .HasForeignKey("AccountingBookId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_accounts_payable_settings_accounting_books_accounting_book_");
+
+                    b.HasOne("Accounting.Domain.Organization.Entities.Company", null)
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_accounts_payable_settings_companies_company_id");
+
+                    b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("InputVatAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_accounts_payable_settings_accounts_input_vat_account_id");
+
+                    b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.Account", null)
+                        .WithMany()
+                        .HasForeignKey("PayableControlAccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_accounts_payable_settings_accounts_payable_control_account_");
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Suppliers.Entities.Supplier", b =>
+                {
+                    b.HasOne("Accounting.AccountsPayable.Domain.PaymentTerms.Entities.PaymentTerm", null)
+                        .WithMany()
+                        .HasForeignKey("PaymentTermId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_suppliers_payment_terms_payment_term_id");
+                });
+
             modelBuilder.Entity("Accounting.Domain.ChartOfAccounts.Entities.Account", b =>
                 {
                     b.HasOne("Accounting.Domain.ChartOfAccounts.Entities.ChartOfAccounts", null)
@@ -916,6 +1374,11 @@ namespace Accounting.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_ledger_account_balances_fiscal_periods_tenant_id_company_id");
+                });
+
+            modelBuilder.Entity("Accounting.AccountsPayable.Domain.Bills.Entities.SupplierBill", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Accounting.GeneralLedger.Domain.Journals.Entities.JournalEntry", b =>

@@ -2,6 +2,8 @@ using Accounting.Infrastructure;
 using Accounting.Application;
 using Accounting.GeneralLedger.Application;
 using Accounting.GeneralLedger.Infrastructure;
+using Accounting.AccountsPayable.Application;
+using Accounting.AccountsPayable.Infrastructure;
 using Accounting.API.Middleware;
 using Accounting.Identity;
 using Accounting.API.Authentication;
@@ -19,6 +21,7 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
+    options.OperationFilter<Accounting.API.Swagger.CompanyHeaderOperationFilter>();
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -42,6 +45,9 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddGeneralLedgerApplication();
 builder.Services.AddGeneralLedgerInfrastructure();
+
+builder.Services.AddAccountsPayableApplication();
+builder.Services.AddAccountsPayableInfrastructure();
 
 builder.Services.AddIdentityModule(builder.Configuration);
 

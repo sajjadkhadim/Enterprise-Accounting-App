@@ -23,6 +23,8 @@
     <ProjectReference Include="..\..\Modules\Identity\Accounting.Identity\Accounting.Identity.csproj" />
     <ProjectReference Include="..\..\Modules\GeneralLedger\Accounting.GeneralLedger.Application\Accounting.GeneralLedger.Application.csproj" />
     <ProjectReference Include="..\..\Modules\GeneralLedger\Accounting.GeneralLedger.Infrastructure\Accounting.GeneralLedger.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Modules\AccountsPayable\Accounting.AccountsPayable.Application\Accounting.AccountsPayable.Application.csproj" />
+    <ProjectReference Include="..\..\Modules\AccountsPayable\Accounting.AccountsPayable.Infrastructure\Accounting.AccountsPayable.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,4 @@
-﻿
-using Accounting.Application.Abstractions;
+﻿using Accounting.Application.Abstractions;
 using Accounting.Domain.Common.Interfaces;
 using Accounting.Infrastructure.ChartOfAccountsFeature;
 using Accounting.Infrastructure.Persistence;
@@ -33,6 +32,11 @@ public static class DependencyInjection
 
         services.AddScoped<ITenantContext>(provider =>
             provider.GetRequiredService<TenantContext>());
+
+        services.AddScoped<CompanyContext>();
+
+        services.AddScoped<ICompanyContext>(provider =>
+            provider.GetRequiredService<CompanyContext>());
 
         services.AddScoped<TenantSessionInterceptor>();
 

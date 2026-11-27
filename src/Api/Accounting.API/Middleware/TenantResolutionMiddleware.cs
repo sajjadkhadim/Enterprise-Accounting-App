@@ -1,4 +1,3 @@
-
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Accounting.Identity.Authorization;
@@ -20,18 +19,18 @@ public sealed class TenantResolutionMiddleware
     public async Task InvokeAsync(
         HttpContext context,
         TenantContext tenantContext,
+        CompanyContext companyContext,
         AppDbContext appDbContext,
         ITenantMembershipAuthorizationService membershipService)
     {
         if (context.User.Identity?.IsAuthenticated == true)
         {
             var userIdClaim =
-                context.User.FindFirstValue(
-                    JwtRegisteredClaimNames.Sub)
-                ?? context.User.FindFirstValue(
-                    ClaimTypes.NameIdentifier);
+                context.User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+                ?? context.User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var tenantIdClaim = context.User.FindFirstValue("tenant_id");
+            var tenantIdClaim =
+                context.User.FindFirstValue("tenant_id");
 
             if (!Guid.TryParse(userIdClaim, out var userId) ||
                 userId == Guid.Empty ||
@@ -65,6 +64,7 @@ public sealed class TenantResolutionMiddleware
             }
 
             var tenantIsActive = await appDbContext.Tenants
+                .IgnoreQueryFilters()
                 .AsNoTracking()
                 .AnyAsync(
                     tenant => tenant.Id == tenantId && tenant.IsActive,
@@ -82,6 +82,46 @@ public sealed class TenantResolutionMiddleware
             }
 
             tenantContext.SetTenant(tenantId);
+
+            // Resolve the selected company when the header is supplied.
+            if (context.Request.Headers.TryGetValue(
+                "X-Company-Id", out var companyHeader))
+            {
+                if (!Guid.TryParse(companyHeader.ToString(), out var companyId) ||
+                    companyId == Guid.Empty)
+                {
+                    context.Response.StatusCode =
+                        StatusCodes.Status400BadRequest;
+
+                    await context.Response.WriteAsync(
+                        "A valid X-Company-Id header is required.");
+
+                    return;
+                }
+
+                var companyIsValid = await appDbContext.Companies
+                    .IgnoreQueryFilters()
+                    .AsNoTracking()
+                    .AnyAsync(
+                        company =>
+                            company.Id == companyId &&
+                            company.TenantId == tenantId &&
+                            company.IsActive,
+                        context.RequestAborted);
+
+                if (!companyIsValid)
+                {
+                    context.Response.StatusCode =
+                        StatusCodes.Status403Forbidden;
+
+                    await context.Response.WriteAsync(
+                        "The selected company is invalid, inactive, or does not belong to this tenant.");
+
+                    return;
+                }
+
+                companyContext.SetCompany(companyId);
+            }
         }
 
         await _next(context);

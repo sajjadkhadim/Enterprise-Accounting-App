@@ -557,3 +557,57 @@ id: 1b7d34ee-1f84-4e1c-9541-ffb0d6110249
   "balancesCarriedForward": 2
 }
 
+# POST /api/accounts-payable/suppliers
+
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "supplierCode": "SUP-001",
+  "name": "Gulf Office Supplies",
+  "legalName": "Gulf Office Supplies LLC",
+  "taxRegistrationNumber": "100123456700003",
+  "email": "accounts@gulfoffice.example",
+  "phone": "+971501234567",
+  "address": "Dubai, UAE",
+  "countryCode": "AE",
+  "currencyCode": "AED",
+  "paymentTermsDays": 30,
+  "creditLimit": 50000
+}
+{
+  "id": "53343c5c-a173-4e38-a90c-9eede0b661c6",
+  "companyId": "f5748c06-d9a8-48ab-97bd-0b22d2718ef0",
+  "supplierCode": "SUP-001",
+  "name": "Gulf Office Supplies",
+  "legalName": "Gulf Office Supplies LLC",
+  "taxRegistrationNumber": "100123456700003",
+  "email": "accounts@gulfoffice.example",
+  "phone": "+971501234567",
+  "address": "Dubai, UAE",
+  "countryCode": "AE",
+  "currencyCode": "AED",
+  "paymentTermsDays": 30,
+  "creditLimit": 50000,
+  "status": 1,
+  "createdAtUtc": "2026-11-27T10:44:33.69364Z"
+}
+
+# POST /api/accounts-payable/payment-terms
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "code": "NET30",
+  "name": "Net 30 Days",
+  "dueDays": 30,
+  "discountDays": null,
+  "discountPercentage": null
+}
+{
+  "id": "ab5a0eb0-854a-427e-a933-ca52b1bb7610",
+  "companyId": "f5748c06-d9a8-48ab-97bd-0b22d2718ef0",
+  "code": "NET30",
+  "name": "Net 30 Days",
+  "dueDays": 30,
+  "discountDays": null,
+  "discountPercentage": null,
+  "status": 1,
+  "createdAtUtc": "2026-11-27T15:38:28.209211Z"
+}
