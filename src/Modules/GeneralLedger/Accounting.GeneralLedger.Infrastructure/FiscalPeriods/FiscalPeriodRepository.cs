@@ -28,6 +28,26 @@ public sealed class FiscalPeriodRepository : IFiscalPeriodRepository
                 cancellationToken);
     }
 
+    public async Task<FiscalPeriod?> GetByIdForUpdateAsync(
+        Guid fiscalPeriodId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default)
+    {
+        var periods = await _context.Set<FiscalPeriod>()
+            .FromSqlInterpolated($"""
+            SELECT *
+            FROM fiscal_periods
+            WHERE id = {fiscalPeriodId}
+              AND tenant_id = {tenantId}
+            FOR UPDATE
+            """)
+            .IgnoreQueryFilters()
+            .AsTracking()
+            .ToListAsync(cancellationToken);
+
+        return periods.SingleOrDefault();
+    }
+
     public async Task<FiscalPeriod?> GetForDateAsync(
         Guid tenantId,
         Guid companyId,
@@ -43,6 +63,37 @@ public sealed class FiscalPeriodRepository : IFiscalPeriodRepository
                 period.StartDate <= date &&
                 period.EndDate >= date)
             .Take(2)
+            .ToListAsync(cancellationToken);
+
+        if (periods.Count > 1)
+        {
+            throw new InvalidOperationException(
+                "Multiple fiscal periods overlap for the specified date.");
+        }
+
+        return periods.SingleOrDefault();
+    }
+
+    public async Task<FiscalPeriod?> GetForDateForUpdateAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly date,
+        CancellationToken cancellationToken = default)
+    {
+        var periods = await _context.Set<FiscalPeriod>()
+            .FromSqlInterpolated($"""
+            SELECT *
+            FROM fiscal_periods
+            WHERE tenant_id = {tenantId}
+              AND company_id = {companyId}
+              AND accounting_book_id = {accountingBookId}
+              AND start_date <= {date}
+              AND end_date >= {date}
+            FOR UPDATE
+            """)
+            .IgnoreQueryFilters()
+            .AsTracking()
             .ToListAsync(cancellationToken);
 
         if (periods.Count > 1)

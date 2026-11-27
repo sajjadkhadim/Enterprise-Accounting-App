@@ -80,7 +80,7 @@ public sealed class ReverseJournalEntryService
                     throw new InvalidOperationException(
                         "This journal has already been reversed.");
 
-                var fiscalPeriod = await _fiscalPeriodRepository.GetForDateAsync(
+                var fiscalPeriod = await _fiscalPeriodRepository.GetForDateForUpdateAsync(
                     tenantId,
                     original.CompanyId,
                     original.AccountingBookId,

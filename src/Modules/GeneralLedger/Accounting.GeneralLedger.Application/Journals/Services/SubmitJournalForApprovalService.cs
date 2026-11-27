@@ -1,5 +1,6 @@
 
 using Accounting.Application.Abstractions;
+using Accounting.GeneralLedger.Domain.FiscalPeriods.Interfaces;
 using Accounting.GeneralLedger.Domain.Journals.Entities;
 using Accounting.GeneralLedger.Domain.Journals.Enums;
 using Accounting.GeneralLedger.Domain.Journals.Interfaces;
@@ -10,15 +11,18 @@ public sealed class SubmitJournalForApprovalService
 {
     private readonly IJournalEntryRepository _repository;
     private readonly IJournalAuditLogRepository _auditRepository;
+    private readonly IFiscalPeriodRepository _fiscalPeriodRepository;
     private readonly IUnitOfWork _unitOfWork;
 
     public SubmitJournalForApprovalService(
         IJournalEntryRepository repository,
         IJournalAuditLogRepository auditRepository,
+        IFiscalPeriodRepository fiscalPeriodRepository,
         IUnitOfWork unitOfWork)
     {
         _repository = repository;
         _auditRepository = auditRepository;
+        _fiscalPeriodRepository = fiscalPeriodRepository;
         _unitOfWork = unitOfWork;
     }
 
@@ -46,7 +50,24 @@ public sealed class SubmitJournalForApprovalService
                     ct);
 
                 if (journal is null)
-                    throw new KeyNotFoundException("Journal entry was not found.");
+                    throw new KeyNotFoundException(
+                        "Journal entry was not found.");
+
+                var fiscalPeriod =
+                    await _fiscalPeriodRepository.GetForDateForUpdateAsync(
+                        tenantId,
+                        journal.CompanyId,
+                        journal.AccountingBookId,
+                        journal.JournalDate,
+                        ct);
+
+                if (fiscalPeriod is null)
+                    throw new InvalidOperationException(
+                        "No fiscal period exists for the journal date.");
+
+                if (!fiscalPeriod.AllowsPosting(journal.JournalDate))
+                    throw new InvalidOperationException(
+                        "Journal entries can only be submitted in an open fiscal period.");
 
                 var previousStatus = journal.Status;
 

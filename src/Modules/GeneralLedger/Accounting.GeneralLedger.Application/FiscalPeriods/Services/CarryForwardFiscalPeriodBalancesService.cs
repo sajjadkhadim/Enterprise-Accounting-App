@@ -44,7 +44,7 @@ public sealed class CarryForwardFiscalPeriodBalancesService
             async ct =>
             {
                 var targetPeriod =
-                    await _fiscalPeriodRepository.GetByIdAsync(
+                    await _fiscalPeriodRepository.GetByIdForUpdateAsync(
                         targetFiscalPeriodId,
                         tenantId.Value,
                         ct);

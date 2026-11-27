@@ -1,3 +1,4 @@
+
 using Accounting.GeneralLedger.Domain.FiscalPeriods.Entities;
 
 namespace Accounting.GeneralLedger.Domain.FiscalPeriods.Interfaces;
@@ -5,11 +6,23 @@ namespace Accounting.GeneralLedger.Domain.FiscalPeriods.Interfaces;
 public interface IFiscalPeriodRepository
 {
     Task<FiscalPeriod?> GetByIdAsync(
-    Guid fiscalPeriodId,
-    Guid tenantId,
-    CancellationToken cancellationToken = default);
+        Guid fiscalPeriodId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default);
+
+    Task<FiscalPeriod?> GetByIdForUpdateAsync(
+        Guid fiscalPeriodId,
+        Guid tenantId,
+        CancellationToken cancellationToken = default);
 
     Task<FiscalPeriod?> GetForDateAsync(
+        Guid tenantId,
+        Guid companyId,
+        Guid accountingBookId,
+        DateOnly date,
+        CancellationToken cancellationToken = default);
+
+    Task<FiscalPeriod?> GetForDateForUpdateAsync(
         Guid tenantId,
         Guid companyId,
         Guid accountingBookId,
@@ -30,7 +43,6 @@ public interface IFiscalPeriodRepository
         DateOnly endDate,
         Guid? excludeFiscalPeriodId = null,
         CancellationToken cancellationToken = default);
-
 
     Task AddAsync(
         FiscalPeriod fiscalPeriod,

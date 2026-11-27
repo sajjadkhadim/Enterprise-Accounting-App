@@ -43,7 +43,7 @@ public sealed class UpdateFiscalPeriodStatusService
         await _unitOfWork.ExecuteInTransactionAsync(
             async ct =>
             {
-                var period = await _repository.GetByIdAsync(
+                var period = await _repository.GetByIdForUpdateAsync(
                     fiscalPeriodId,
                     tenantId,
                     ct);

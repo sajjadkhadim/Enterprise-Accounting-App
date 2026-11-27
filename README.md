@@ -438,3 +438,122 @@ retrival_id: a29b58b2-54f5-4748-866f-582e5aef8d58
   ],
   "status": "Draft"
 }
+
+# GET /api/general-ledger/reports/trial-balance
+Use:
+- companyId: f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+- accountingBookId: a58e9953-c92c-4678-bcfd-d427aac0f775
+- fiscalPeriodId: d8b7acbc-9616-4a27-a5dd-508cbaa483bb
+- currencyCode: AED
+
+{
+  "companyId": "f5748c06-d9a8-48ab-97bd-0b22d2718ef0",
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "fiscalPeriodId": "d8b7acbc-9616-4a27-a5dd-508cbaa483bb",
+  "currencyCode": "AED",
+  "lines": [
+    {
+      "accountId": "241c8e09-f2fc-4375-a4fa-172364139bb9",
+      "accountCode": "4100",
+      "accountName": "Sales Revenue",
+      "openingDebit": 0,
+      "openingCredit": 0,
+      "periodDebit": 1000,
+      "periodCredit": 1000,
+      "closingDebit": 0,
+      "closingCredit": 0,
+      "currencyCode": "AED",
+      "accountType": "Revenue",
+      "accountCategory": "OperatingRevenue"
+    },
+    {
+      "accountId": "6c910eab-b841-41b5-8b58-450a951ac94e",
+      "accountCode": "1001",
+      "accountName": "Cash on Hand",
+      "openingDebit": 0,
+      "openingCredit": 0,
+      "periodDebit": 1000,
+      "periodCredit": 600,
+      "closingDebit": 400,
+      "closingCredit": 0,
+      "currencyCode": "AED",
+      "accountType": "Asset",
+      "accountCategory": "CurrentAsset"
+    },
+    {
+      "accountId": "8839f829-7f51-4e0b-bc0c-a76f57e0ad6b",
+      "accountCode": "5100",
+      "accountName": "Operating Expenses",
+      "openingDebit": 0,
+      "openingCredit": 0,
+      "periodDebit": 600,
+      "periodCredit": 600,
+      "closingDebit": 0,
+      "closingCredit": 0,
+      "currencyCode": "AED",
+      "accountType": "Expense",
+      "accountCategory": "OperatingExpense"
+    },
+    {
+      "accountId": "a29b58b2-54f5-4748-866f-582e5aef8d58",
+      "accountCode": "3100",
+      "accountName": "Retained Earnings",
+      "openingDebit": 0,
+      "openingCredit": 0,
+      "periodDebit": 0,
+      "periodCredit": 400,
+      "closingDebit": 0,
+      "closingCredit": 400,
+      "currencyCode": "AED",
+      "accountType": "Equity",
+      "accountCategory": "Equity"
+    }
+  ],
+  "totalOpeningDebit": 0,
+  "totalOpeningCredit": 0,
+  "totalPeriodDebit": 2600,
+  "totalPeriodCredit": 2600,
+  "totalClosingDebit": 400,
+  "totalClosingCredit": 400,
+  "isOpeningBalanced": true,
+  "isPeriodBalanced": true,
+  "isClosingBalanced": true
+}
+
+# POST /api/general-ledger/fiscal-periods/{id}/actions/{operation}
+
+Use:
+- id: d8b7acbc-9616-4a27-a5dd-508cbaa483bb
+- operation: close
+
+204
+
+# POST /api/general-ledger/fiscal-periods
+{
+  "companyId": "f5748c06-d9a8-48ab-97bd-0b22d2718ef0",
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "name": "FY 2027",
+  "startDate": "2027-01-01",
+  "endDate": "2027-12-31"
+}
+{
+  "id": "1b7d34ee-1f84-4e1c-9541-ffb0d6110249",
+  "companyId": "f5748c06-d9a8-48ab-97bd-0b22d2718ef0",
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "name": "FY 2027",
+  "startDate": "2027-01-01",
+  "endDate": "2027-12-31",
+  "status": 1
+}
+
+# POST /api/general-ledger/fiscal-periods/{id}/carry-forward
+Use the FY 2027 ID:
+
+id: 1b7d34ee-1f84-4e1c-9541-ffb0d6110249
+
+{
+  "message": "Opening balances carried forward successfully.",
+  "targetFiscalPeriodId": "1b7d34ee-1f84-4e1c-9541-ffb0d6110249",
+  "balancesCarriedForward": 2
+}
+

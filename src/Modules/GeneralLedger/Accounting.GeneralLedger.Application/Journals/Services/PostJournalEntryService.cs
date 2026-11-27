@@ -70,7 +70,7 @@ public sealed class PostJournalEntryService
                         "Only approved journal entries can be posted.");
 
                 var fiscalPeriod =
-                    await _fiscalPeriodRepository.GetForDateAsync(
+                    await _fiscalPeriodRepository.GetForDateForUpdateAsync(
                         tenantId,
                         journal.CompanyId,
                         journal.AccountingBookId,

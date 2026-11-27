@@ -130,8 +130,6 @@ public sealed class JournalsController : ControllerBase
         }
     }
 
-
-
     [HttpPost("create")]
     public async Task<IActionResult> Create(
         [FromBody] CreateJournalEntryRequest request,
@@ -192,7 +190,6 @@ public sealed class JournalsController : ControllerBase
         }
     }
 
-
     [HttpPost("{id:guid}/submit")]
     public async Task<IActionResult> Submit(
         Guid id,
@@ -231,8 +228,6 @@ public sealed class JournalsController : ControllerBase
         }
     }
 
-
-
     [HttpPost("{id:guid}/approve")]
     public async Task<IActionResult> Approve(
         Guid id,
@@ -270,7 +265,6 @@ public sealed class JournalsController : ControllerBase
             return BadRequest(new { error = exception.Message });
         }
     }
-
 
     [HttpGet("paged")]
     public async Task<IActionResult> GetPaged(
@@ -320,7 +314,6 @@ public sealed class JournalsController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
-
 
     [HttpPost("{id:guid}/reverse")]
     public async Task<IActionResult> Reverse(
