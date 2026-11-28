@@ -611,3 +611,161 @@ X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
   "status": 1,
   "createdAtUtc": "2026-11-27T15:38:28.209211Z"
 }
+# 2100
+{
+  "chartOfAccountsId": "e7f4aad4-4e32-44ba-9d79-25644a9084cc",
+  "parentAccountId": null,
+  "code": "2100",
+  "name": "Accounts Payable",
+  "accountType": 2,
+  "accountCategory": 3,
+  "cashFlowCategory": 4,
+  "isPostingAllowed": true
+}
+{
+  "id": "a51c6c04-0d6e-402b-a971-e70158505449",
+  "chartOfAccountsId": "e7f4aad4-4e32-44ba-9d79-25644a9084cc",
+  "parentAccountId": null,
+  "code": "2100",
+  "name": "Accounts Payable",
+  "accountType": 2,
+  "accountCategory": 3,
+  "cashFlowCategory": 4,
+  "isCashOrCashEquivalent": false,
+  "isPostingAllowed": true,
+  "isActive": true,
+  "level": 1,
+  "createdAtUtc": "2026-11-27T17:36:42.328842Z"
+}
+# 1200
+{
+  "chartOfAccountsId": "e7f4aad4-4e32-44ba-9d79-25644a9084cc",
+  "parentAccountId": null,
+  "code": "1200",
+  "name": "Input VAT Recoverable",
+  "accountType": 1,
+  "accountCategory": 1,
+  "cashFlowCategory": 4,
+  "isPostingAllowed": true
+}
+{
+  "id": "6ecd7176-ce72-4d99-be80-a1a78eab2d29",
+  "chartOfAccountsId": "e7f4aad4-4e32-44ba-9d79-25644a9084cc",
+  "parentAccountId": null,
+  "code": "1200",
+  "name": "Input VAT Recoverable",
+  "accountType": 1,
+  "accountCategory": 1,
+  "cashFlowCategory": 4,
+  "isCashOrCashEquivalent": false,
+  "isPostingAllowed": true,
+  "isActive": true,
+  "level": 1,
+  "createdAtUtc": "2026-11-27T17:38:07.957335Z"
+}
+# PUT /api/accounts-payable/settings
+{
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "payableControlAccountId": "a51c6c04-0d6e-402b-a971-e70158505449",
+  "inputVatAccountId": "6ecd7176-ce72-4d99-be80-a1a78eab2d29"
+}
+{
+  "id": "62838c1b-afda-47de-ad2e-11352f692145",
+  "message": "Accounts Payable settings saved successfully."
+}
+
+# POST /api/accounts-payable/bills
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "supplierId": "53343c5c-a173-4e38-a90c-9eede0b661c6",
+  "billNumber": "BILL-TEST-001",
+  "supplierInvoiceNumber": "INV-TEST-001",
+  "invoiceDate": "2026-11-28",
+  "dueDate": "2026-12-28",
+  "currencyCode": "AED",
+  "lines": [
+    {
+      "accountId": "a51c6c04-0d6e-402b-a971-e70158505449",
+      "description": "Office supplies",
+      "quantity": 1,
+      "unitPrice": 100,
+      "taxRate": 5
+    }
+  ]
+}
+{
+  "id": "3f0163a0-a41d-4f0e-9a60-a426cc047510",
+  "message": "Supplier bill created successfully."
+}
+# POST /api/accounts-payable/bills/3f0163a0-a41d-4f0e-9a60-a426cc047510/submit
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "message": "Supplier bill submitted for approval."
+}
+# POST /api/accounts-payable/bills/3f0163a0-a41d-4f0e-9a60-a426cc047510/approve
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "message": "Supplier bill approved."
+}
+# POST /api/accounts-payable/bills/3f0163a0-a41d-4f0e-9a60-a426cc047510/post
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "message": "Journal entries can only be created in an open fiscal period."
+}
+
+# Another Bill
+# POST /api/accounts-payable/bills
+X-Company-Id : f5748c06-d9a8-48ab-97bd-0b22d2718ef0
+{
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "supplierId": "53343c5c-a173-4e38-a90c-9eede0b661c6",
+  "billNumber": "BILL-TEST-002",
+  "supplierInvoiceNumber": "INV-TEST-002",
+  "invoiceDate": "2027-01-15",
+  "dueDate": "2027-02-14",
+  "currencyCode": "AED",
+  "lines": [
+    {
+      "accountId": "a51c6c04-0d6e-402b-a971-e70158505449",
+      "description": "Office supplies",
+      "quantity": 1,
+      "unitPrice": 100,
+      "taxRate": 5
+    }
+  ]
+}
+{
+  "id": "c54fdad5-292e-4a32-9d0f-6c622930b0a4",
+  "message": "Supplier bill created successfully."
+}
+
+# Another Bill
+# POST /api/accounts-payable/bills
+{
+  "accountingBookId": "a58e9953-c92c-4678-bcfd-d427aac0f775",
+  "supplierId": "53343c5c-a173-4e38-a90c-9eede0b661c6",
+  "billNumber": "BILL-TEST-003",
+  "supplierInvoiceNumber": "INV-TEST-003",
+  "invoiceDate": "2027-01-15",
+  "dueDate": "2027-02-14",
+  "currencyCode": "AED",
+  "lines": [
+    {
+      "accountId": "8839f829-7f51-4e0b-bc0c-a76f57e0ad6b",
+      "description": "Office supplies",
+      "quantity": 1,
+      "unitPrice": 100,
+      "taxRate": 5
+    }
+  ]
+}
+{
+  "id": "1dcb033b-e541-49d9-922c-21121ed5d4f5",
+  "message": "Supplier bill created successfully."
+}
+
+# After submit, approve, and post supplier's bill
+{
+  "message": "Supplier bill posted successfully and General Ledger journal created."
+}

@@ -32,6 +32,77 @@ public sealed class SubmitJournalForApprovalService
         Guid userId,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequest(journalEntryId, tenantId, userId);
+
+        await _unitOfWork.ExecuteInTransactionAsync(
+            async ct =>
+            {
+                await ExecuteWithinTransactionAsync(
+                    journalEntryId,
+                    tenantId,
+                    userId,
+                    ct);
+
+                return true;
+            },
+            cancellationToken);
+    }
+
+    public async Task ExecuteWithinTransactionAsync(
+        Guid journalEntryId,
+        Guid tenantId,
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequest(journalEntryId, tenantId, userId);
+
+        var journal = await _repository.GetByIdAsync(
+            journalEntryId,
+            tenantId,
+            cancellationToken);
+
+        if (journal is null)
+            throw new KeyNotFoundException(
+                "Journal entry was not found.");
+
+        var fiscalPeriod =
+            await _fiscalPeriodRepository.GetForDateForUpdateAsync(
+                tenantId,
+                journal.CompanyId,
+                journal.AccountingBookId,
+                journal.JournalDate,
+                cancellationToken);
+
+        if (fiscalPeriod is null)
+            throw new InvalidOperationException(
+                "No fiscal period exists for the journal date.");
+
+        if (!fiscalPeriod.AllowsPosting(journal.JournalDate))
+            throw new InvalidOperationException(
+                "Journal entries can only be submitted in an open fiscal period.");
+
+        var previousStatus = journal.Status;
+
+        journal.SubmitForApproval();
+
+        var auditLog = new JournalAuditLog(
+            tenantId,
+            journal.Id,
+            userId,
+            JournalAuditAction.SubmittedForApproval,
+            previousStatus,
+            journal.Status,
+            "Journal entry submitted for approval.");
+
+        await _auditRepository.AddAsync(auditLog, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+    }
+
+    private static void ValidateRequest(
+        Guid journalEntryId,
+        Guid tenantId,
+        Guid userId)
+    {
         if (journalEntryId == Guid.Empty)
             throw new ArgumentException("Journal entry ID is required.");
 
@@ -40,53 +111,5 @@ public sealed class SubmitJournalForApprovalService
 
         if (userId == Guid.Empty)
             throw new ArgumentException("User ID is required.");
-
-        await _unitOfWork.ExecuteInTransactionAsync(
-            async ct =>
-            {
-                var journal = await _repository.GetByIdAsync(
-                    journalEntryId,
-                    tenantId,
-                    ct);
-
-                if (journal is null)
-                    throw new KeyNotFoundException(
-                        "Journal entry was not found.");
-
-                var fiscalPeriod =
-                    await _fiscalPeriodRepository.GetForDateForUpdateAsync(
-                        tenantId,
-                        journal.CompanyId,
-                        journal.AccountingBookId,
-                        journal.JournalDate,
-                        ct);
-
-                if (fiscalPeriod is null)
-                    throw new InvalidOperationException(
-                        "No fiscal period exists for the journal date.");
-
-                if (!fiscalPeriod.AllowsPosting(journal.JournalDate))
-                    throw new InvalidOperationException(
-                        "Journal entries can only be submitted in an open fiscal period.");
-
-                var previousStatus = journal.Status;
-
-                journal.SubmitForApproval();
-
-                var auditLog = new JournalAuditLog(
-                    tenantId,
-                    journal.Id,
-                    userId,
-                    JournalAuditAction.SubmittedForApproval,
-                    previousStatus,
-                    journal.Status,
-                    "Journal entry submitted for approval.");
-
-                await _auditRepository.AddAsync(auditLog, ct);
-                await _repository.SaveChangesAsync(ct);
-
-                return true;
-            },
-            cancellationToken);
     }
 }

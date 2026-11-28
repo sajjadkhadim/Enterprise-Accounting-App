@@ -28,9 +28,10 @@ public static class DependencyInjection
         services.AddScoped<SubmitSupplierBillForApprovalService>();
         services.AddScoped<ApproveSupplierBillService>();
         services.AddScoped<RejectSupplierBillService>();
+        services.AddScoped<PostSupplierBillService>();
 
         services.AddScoped<ConfigureAccountsPayableService>();
-        
+
         return services;
     }
 }

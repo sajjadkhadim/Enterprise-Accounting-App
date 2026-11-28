@@ -10,10 +10,10 @@ public sealed class SupplierBillLine
     public decimal TaxRate { get; private set; }
 
     public decimal Subtotal => decimal.Round(
-        Quantity * UnitPrice, 4);
+    Quantity * UnitPrice, 2);
 
     public decimal TaxAmount => decimal.Round(
-        Subtotal * TaxRate / 100m, 4);
+        Subtotal * TaxRate / 100m, 2);
 
     public decimal Total => Subtotal + TaxAmount;
 

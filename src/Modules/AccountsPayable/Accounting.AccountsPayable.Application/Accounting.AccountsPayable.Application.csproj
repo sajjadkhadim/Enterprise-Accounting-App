@@ -5,6 +5,10 @@
     <ProjectReference Include="..\..\..\BuildingBlocks\Accounting.Application\Accounting.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\GeneralLedger\Accounting.GeneralLedger.Application\Accounting.GeneralLedger.Application.csproj" />
+  </ItemGroup>
+  
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>

@@ -91,7 +91,7 @@ public sealed class SupplierBillRepository : ISupplierBillRepository
         CancellationToken cancellationToken = default)
     {
         return _context.Set<Supplier>()
-            .Include(x => x.PaymentTermId)
+            // .Include(x => x.PaymentTermId)
             .FirstOrDefaultAsync(
                 x => x.Id == supplierId &&
                      x.TenantId == tenantId &&
@@ -128,6 +128,33 @@ public sealed class SupplierBillRepository : ISupplierBillRepository
                      x.TenantId == tenantId &&
                      x.CompanyId == companyId,
                 cancellationToken);
+    }
+
+    public async Task<SupplierBill?> GetForUpdateAsync(
+        Guid billId,
+        Guid tenantId,
+        Guid companyId,
+        CancellationToken cancellationToken = default)
+    {
+        var bill = await _context.Set<SupplierBill>()
+            .FromSqlInterpolated($@"
+            SELECT *
+            FROM supplier_bills
+            WHERE id = {billId}
+              AND tenant_id = {tenantId}
+              AND company_id = {companyId}
+            FOR UPDATE")
+            .AsTracking()
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (bill is null)
+            return null;
+
+        await _context.Entry(bill)
+            .Collection(x => x.Lines)
+            .LoadAsync(cancellationToken);
+
+        return bill;
     }
 
     public Task AddAsync(

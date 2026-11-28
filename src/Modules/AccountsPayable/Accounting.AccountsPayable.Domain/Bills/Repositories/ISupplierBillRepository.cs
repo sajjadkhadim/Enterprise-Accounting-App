@@ -43,6 +43,12 @@ public interface ISupplierBillRepository
         Guid companyId,
         CancellationToken cancellationToken = default);
 
+    Task<SupplierBill?> GetForUpdateAsync(
+        Guid billId,
+        Guid tenantId,
+        Guid companyId,
+        CancellationToken cancellationToken = default);
+        
     Task AddAsync(
         SupplierBill bill,
         CancellationToken cancellationToken = default);

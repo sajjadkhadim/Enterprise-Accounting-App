@@ -5,6 +5,7 @@ using Accounting.AccountsPayable.Domain.Bills.Repositories;
 using Accounting.Domain.Common.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Accounting.API.Controllers.AccountsPayable;
 
@@ -21,12 +22,14 @@ public sealed class SupplierBillsController : ControllerBase
     private readonly SubmitSupplierBillForApprovalService _submitService;
     private readonly ApproveSupplierBillService _approveService;
     private readonly RejectSupplierBillService _rejectService;
+    private readonly PostSupplierBillService _postService;
 
     public SupplierBillsController(
         CreateSupplierBillService createService,
         SubmitSupplierBillForApprovalService submitService,
         ApproveSupplierBillService approveService,
         RejectSupplierBillService rejectService,
+        PostSupplierBillService postService,
         ISupplierBillRepository billRepository,
         ITenantContext tenantContext,
         ICompanyContext companyContext)
@@ -35,6 +38,7 @@ public sealed class SupplierBillsController : ControllerBase
         _submitService = submitService;
         _approveService = approveService;
         _rejectService = rejectService;
+        _postService = postService;
         _billRepository = billRepository;
         _tenantContext = tenantContext;
         _companyContext = companyContext;
@@ -102,7 +106,6 @@ public sealed class SupplierBillsController : ControllerBase
 
         return Ok(SupplierBillResponse.FromEntity(bill));
     }
-
 
     [HttpPost("{id:guid}/submit")]
     public async Task<IActionResult> SubmitForApproval(
@@ -194,4 +197,45 @@ public sealed class SupplierBillsController : ControllerBase
         }
     }
 
+    [HttpPost("{id:guid}/post")]
+    public async Task<IActionResult> Post(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        if (!_tenantContext.HasTenant || !_companyContext.HasCompany)
+            return BadRequest("A tenant and company must be selected.");
+
+        var userIdValue = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(userIdValue, out var userId))
+            return Unauthorized();
+
+        try
+        {
+            await _postService.ExecuteAsync(
+                id,
+                _tenantContext.TenantId!.Value,
+                _companyContext.CompanyId!.Value,
+                userId,
+                cancellationToken);
+
+            return Ok(new
+            {
+                message = "Supplier bill posted successfully and General Ledger journal created."
+            });
+        }
+        catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+    }
 }
